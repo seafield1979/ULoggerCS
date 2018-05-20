@@ -1,0 +1,79 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ULoggerCS
+{
+    class LogDetailTest2 : LogDetail
+    {
+        // Consts
+        public const int ARRAY1_SIZE = 10;
+        // Properties
+        protected int[] array1 = new int[ARRAY1_SIZE];
+
+        // Accessor
+        public void setArray1(int index, int value)
+        {
+            if (index < ARRAY1_SIZE)
+            {
+                array1[index] = value;
+            }
+        }
+
+        // Constructor
+        public LogDetailTest2()
+        {
+
+        }
+
+        // 初期値を設定する
+        public void Init()
+        {
+            for (int i = 0; i < ARRAY1_SIZE; i++)
+            {
+                array1[i] = i + 1;
+            }
+        }
+
+        // Methods
+        override public LogDetail CreateCopy()
+        {
+            LogDetailTest2 copy1 = new LogDetailTest2();
+            for (int i = 0; i < ARRAY1_SIZE; i++)
+            {
+                copy1.array1[i] = array1[i];
+            }
+
+            return copy1;
+        }
+
+        override public string toString()
+        {
+            StringBuilder sb = new StringBuilder();
+            
+            for (int i = 0; i < ARRAY1_SIZE; i++)
+            {
+                if (i > 0)
+                {
+                    sb.Append(",");
+                }
+                string str = String.Format("[{0}]:{1}", i, array1[i]);
+                sb.Append(str);
+            }
+            return sb.ToString();
+        }
+
+        public override string dataTypeString()
+        {
+            return "detail_type:array";
+        }
+
+        public override byte[] toBinary()
+        {
+            // TODO: toBinaryは未実装
+            return null;
+        }
+    }
+}
