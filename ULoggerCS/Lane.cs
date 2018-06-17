@@ -10,7 +10,7 @@ namespace ULoggerCS
     class Lane : Log
     {
         // Variables
-        private int id;
+        private UInt32 id;
         private string  name;
         private UInt32 color;
 
@@ -27,7 +27,7 @@ namespace ULoggerCS
         }
 
 
-        public int Id
+        public UInt32 Id
         {
             get { return id; }
             set { id = value; }
@@ -43,7 +43,7 @@ namespace ULoggerCS
             color = 0;
         }
 
-        public Lane(int id, string name, UInt32 color)
+        public Lane(UInt32 id, string name, UInt32 color)
         {
             this.id = id;
             this.name = name;
@@ -53,7 +53,7 @@ namespace ULoggerCS
         // Methods
         override public string ToString()
         {
-            return string.Format(@"id:{0},name:""{1}"",color:#{2:X8}", id, name, color );
+            return string.Format(@"id:{0},name:""{1}"",color:{2:X8}", id, name, color );
         }
 
         override public byte[] ToBinary()
@@ -89,11 +89,15 @@ namespace ULoggerCS
         }
 
         // Methods
-        public bool Add(int id, string name, UInt32 color)
+        public void Add(UInt32 id, string name, UInt32 color)
         {
             Lane lane = new Lane(id, name, color);
             list.Add(lane);
-            return true;
+        }
+
+        public void Add(Lane lane)
+        {
+            list.Add(lane);
         }
 
         public void WriteToFile(StreamWriter sw)

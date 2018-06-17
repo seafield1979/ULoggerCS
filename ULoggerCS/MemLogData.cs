@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-// ファイルへの書き込みを行うクラス
+/**
+ * ULogViewでメモリ上に展開されたLogArea
+ */
 namespace ULoggerCS
 {
-    class FileWriter
+    class MemLogData
     {
-        // Variables
-
 
     }
 }

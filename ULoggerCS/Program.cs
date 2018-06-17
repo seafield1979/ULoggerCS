@@ -12,10 +12,25 @@ namespace ULoggerCS
     {
         static void Main(string[] args)
         {
+            //TestWrite1();
+            TestRead1();
+
+            // 入力待ち 
+            string input1 = Console.ReadLine();
+
+        }
+
+        public static void TestWrite1()
+        {
             // Loggerを作成
             Logger logger = new Logger();
+#if true
+            logger.FileType = LogFileType.Text;       // バイナリ形式で保存
+            logger.LogFilePath = @".\default.log";
+#else
             logger.FileType = LogFileType.Binary;       // バイナリ形式で保存
             logger.LogFilePath = @".\default_log.dat";
+#endif
 
             // ヘッダー情報を追加
             logger.AddLogID(1, "id1", UColor.Black);
@@ -29,10 +44,10 @@ namespace ULoggerCS
             logger.AddLane(4, "lane4", UColor.Black);
 
             // エリアを追加
-            logger.AddArea("area1", null, LogAreaType.Data);
+            logger.AddArea("area1", null);
 
             // ログを追加
-            for (int i=0; i<10; i++)
+            for (int i = 0; i < 10; i++)
             {
                 logger.AddLogData(1, LogType.Single, 1, "test1");
             }
@@ -62,10 +77,16 @@ namespace ULoggerCS
             // ファイルに書き込み
             logger.WriteHeader();
             logger.WriteBody();
+        }
 
-            // 入力待ち 
-            string input1 = Console.ReadLine();
+        public static void TestRead1()
+        {
+            // Loggerを作成
+            LogReader reader = new LogReader();
 
+            reader.ReadLogFile(@".\default.log", LogFileType.Text);
+
+            Console.WriteLine("TestRead1 finished!!");
         }
     }
 

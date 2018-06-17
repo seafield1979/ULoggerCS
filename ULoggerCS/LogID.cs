@@ -7,16 +7,16 @@ namespace ULoggerCS
 {
     /*
      * <logid>
-	 	 id:1,name:"名前1",color:#00ff00,blink:off
+	 	 id:1,name:"名前1",color:00ff00,blink:off
 		 id:2,name:"名前2",color:rgb(100,100,20),blink:on
 		 id:3,name:"名前2",image:"image1"
 	   </logid>
     */
     class LogID : Log
     {
-        private int id;
+        private UInt32 id;
 
-        public int ID
+        public UInt32 ID
         {
             get { return id; }
             set { id = value; }
@@ -67,7 +67,7 @@ namespace ULoggerCS
             imageName = null;
         }
 
-        public LogID(int id, string name, UInt32 color, UInt32 frameColor = 0xFF000000, string image = null)
+        public LogID(UInt32 id, string name, UInt32 color, UInt32 frameColor = 0xFF000000, string image = null)
         {
             this.id = id;
             this.name = name;
@@ -81,7 +81,7 @@ namespace ULoggerCS
         // 
         override public string ToString()
         {
-            return string.Format(@"id:{0},name:""{1}"",color:#{2:X8}", id, name, color);
+            return string.Format(@"id:{0},name:""{1}"",color:{2:X8}", id, name, color);
         }
 
         override public byte[] ToBinary()
@@ -119,7 +119,7 @@ namespace ULoggerCS
     class LogIDs
     {
         // Variables
-        List<LogID> list;
+        private List<LogID> list;
 
         // Constructor
         public LogIDs()
@@ -128,11 +128,16 @@ namespace ULoggerCS
         }
 
         // Methods
-        public bool Add(int id, string name, UInt32 color, UInt32 frameColor = 0xFF000000)
+        public bool Add(UInt32 id, string name, UInt32 color, UInt32 frameColor = 0xFF000000)
         {
             LogID logId = new LogID(id, name, color, frameColor);
             list.Add(logId);
             return true;
+        }
+
+        public void Add(LogID logId)
+        {
+            list.Add(logId);
         }
 
         /**

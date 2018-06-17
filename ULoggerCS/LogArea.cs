@@ -10,12 +10,6 @@ namespace ULoggerCS
      * area,name:"エリア1",parent:"root",type:"dir"
      * area,name:"エリア2",parent:"エリア1",type:"data",color:#00ff00
      */
-    enum LogAreaType
-    {
-        Dir,        // 配下に子エリアを持てる。DataやDirタイプの親になる。
-        Data,       // 配下にログを持てるエリア
-    }
-
     class LogArea : Log
     {
         //
@@ -37,14 +31,6 @@ namespace ULoggerCS
             set { parentName = value; }
         }
 
-        private LogAreaType type;
-
-        public LogAreaType Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
-
         private UInt32 color;
 
         public UInt32 Color
@@ -57,7 +43,7 @@ namespace ULoggerCS
         //
         // Constructor
         //
-        public LogArea(string name, string parentName, LogAreaType type, UInt32 color = 0xFF000000)
+        public LogArea(string name, string parentName, UInt32 color = 0xFF000000)
         {
             this.name = name;
             if (parentName == null || parentName.Length == 0)
@@ -65,17 +51,14 @@ namespace ULoggerCS
                 parentName = "root";
             }
             this.parentName = parentName;
-            this.type = type;
             this.color = color;
         }
 
         override public string ToString()
         {
-            // area,name: "エリア1",parent: "root",type: "dir"
-            string typeStr = (type == LogAreaType.Dir) ? "dir" : "data";
-            return String.Format("area,name:\"{0}\",parent:\"{1}\",type:\"{2}\",color={3:X8}", name, parentName, typeStr, color);
+            // area,name: "エリア1",parent: "root",color:FF112233
+            return String.Format("area,name:\"{0}\",parent:\"{1}\",color={2:X8}", name, parentName, color);
         }
-
 
         override public byte[] ToBinary()
         {
@@ -94,9 +77,6 @@ namespace ULoggerCS
 
             // 親のエリア名
             data.AddRange(parentNameData);
-
-            // 種別
-            data.Add((byte)type);
 
             // 色
             data.AddRange(BitConverter.GetBytes(color));

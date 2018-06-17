@@ -50,12 +50,20 @@ namespace ULoggerCS
         private int currentPos;         // 現在のブロック内での位置
         private int allocatedBlockNum;  // 確保済みのブロック数
         private LogFileType fileType;   // ログファイルの種類
-  
+        private string encodingType;    // 文字コードの種類
+
+        
         public LogFileType FileType
         {
             get { return fileType; }
             set { fileType = value; }
         }
+        public string EncodingType
+        {
+            get { return encodingType; }
+            set { encodingType = value; }
+        }
+
 
 
         // ダブルバッファなので２つ
@@ -90,6 +98,7 @@ namespace ULoggerCS
             currentPos = 0;
             allocatedBlockNum = 0;
             fileType = LogFileType.Text;
+            encodingType = "UTF8";          // デフォルトはUTF8
 
             // 最初に２ブロック確保
             for (int i = 0; i < 2; i++)
@@ -137,13 +146,13 @@ namespace ULoggerCS
         }
 
         // レーン情報を追加
-        public void AddLane(int id, string name, UInt32 color)
+        public void AddLane(UInt32 id, string name, UInt32 color)
         {
             lanes.Add(id, name, color);
         }
 
         // ログID情報を追加
-        public void AddLogID(int id, string name, UInt32 color, UInt32 frameColor = 0xFF000000)
+        public void AddLogID(UInt32 id, string name, UInt32 color, UInt32 frameColor = 0xFF000000)
         {
             logIDs.Add(id, name, color, frameColor);
         }
@@ -214,9 +223,9 @@ namespace ULoggerCS
          * @input type: エリアの種類
          * @input color: エリアの背景色
          */
-        public void AddArea(string name, string parentName, LogAreaType type, UInt32 color = 0xFF000000)
+        public void AddArea(string name, string parentName, UInt32 color = 0xFF000000)
         {
-            LogArea log = new LogArea(name, parentName, type, color);
+            LogArea log = new LogArea(name, parentName, color);
             AddLog(log);
         }
 
@@ -254,10 +263,10 @@ namespace ULoggerCS
             using (StreamWriter sw = new StreamWriter(logFilePath, false, Encoding.UTF8))
             {
                 sw.WriteLine("<head>");
-
+                sw.WriteLine("encoding:{0}", encodingType);
                 // 書き込み処理
-                sw.WriteLine(lanes.ToString());
-                sw.WriteLine(logIDs.ToString());
+                sw.Write(lanes.ToString());
+                sw.Write(logIDs.ToString());
 
                 sw.WriteLine("</head>");
             }
@@ -271,6 +280,12 @@ namespace ULoggerCS
             // 新規
             using (FileStream fs = new FileStream(logFilePath, FileMode.Create, FileAccess.Write))
             {
+                // エンコードの長さ
+                byte[] encodingData = Encoding.UTF8.GetBytes(encodingType);
+                fs.Write(BitConverter.GetBytes(encodingType.Length), 0, 4);
+                // エンコード
+                fs.Write(encodingData, 0, encodingData.Length);
+
                 // ID情報
                 byte[] data = logIDs.ToBinary();
                 fs.Write(data, 0, data.Length);
