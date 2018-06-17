@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+/**
+ * ログデータ(1件１件の表示されるログ情報)
+ */
 namespace ULoggerCS
 {
     class LogData : Log
@@ -11,11 +14,11 @@ namespace ULoggerCS
         //
         // Properties
         //
-        private double time;            // time of log
-        private string text;            // text
         private int logId;              // log id
-        private int laneId;             // lane id
         private LogType logType;     // type of log
+        private int laneId;             // lane id
+        private string text;            // text
+        private double time;            // time of log
         private LogDetail detail;		// detail of log
 
         // Constructor
@@ -35,7 +38,7 @@ namespace ULoggerCS
                 // ※ログをファイルに出力するまでにコピー元が存在しているとは限らないため
                 text = String.Copy(_text);
             }
-            if (detail != null)
+            if (_detail != null)
             {
                 detail = _detail.CreateCopy();
             }
@@ -48,7 +51,7 @@ namespace ULoggerCS
             detail = null;
         }
 
-        public override string toString()
+        public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
 
@@ -61,14 +64,49 @@ namespace ULoggerCS
             }
             if (detail != null)
             {
-                sb.Append( String.Format( ",{0},{{1}}", detail.dataTypeString(), detail.toString()));
+                sb.Append( String.Format( @",detail_type:{0},""{1}""", detail.dataTypeString(), detail.ToString()));
             }
 
             return sb.ToString();
         }
-        public override byte[] toBinary()
+
+        /**
+         * バイナリ形式のデータを取得する
+         */
+        public override byte[] ToBinary()
         {
-            return null;
+            List<byte> data = new List<byte>(1000);
+
+            // ログID
+            data.AddRange(BitConverter.GetBytes(logId));
+            // ログタイプ
+            data.Add((byte)logType);
+            // 表示レーンID
+            data.AddRange(BitConverter.GetBytes(laneId));
+            //タイトルの長さ
+            byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
+            data.AddRange(BitConverter.GetBytes(textData.Length));
+            //タイトル
+            data.AddRange(textData);
+            //時間
+            data.AddRange(BitConverter.GetBytes(time));
+            if (detail == null)
+            {
+                // ログデータ(詳細)の種類
+                data.Add((byte)DetailDataType.None);
+            }
+            else
+            {
+                // ログデータ(詳細)の種類
+                data.Add(detail.dataTypeByte());
+                // ログデータ(詳細)のサイズ
+                byte[] detailData = detail.ToBinary();
+                data.AddRange(BitConverter.GetBytes(detailData.Length));
+                // ログデータ(詳細)
+                data.AddRange(detailData);
+            }
+
+            return data.ToArray();
         }
     }
 }

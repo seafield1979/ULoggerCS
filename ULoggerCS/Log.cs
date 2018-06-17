@@ -6,9 +6,21 @@ using System.Threading.Tasks;
 
 namespace ULoggerCS
 {
+    // 色の定義
+    // ログやエリアの色指定に使用する
+    class UColor
+    {
+        public const UInt32 Black = 0xFF000000;
+        public const UInt32 Red = 0xFFFF0000;
+        public const UInt32 Green = 0xFF00FF00;
+        public const UInt32 Blue = 0xFF0000FF;
+        public const UInt32 Yellow = 0xFFFFFF00;
+        public const UInt32 Gray = 0xFF808080;
+    }
+
     // Type of Log
     // ログの種別
-    public enum LogType
+    public enum LogType : byte
     {
         Single = 0, //E_LOG_SINGLE = 0,               // 単体ログ
         AreaStart,  //E_LOG_AREA_ST,                  // 範囲開始
@@ -25,8 +37,8 @@ namespace ULoggerCS
         {
         }
 
-        public abstract string toString();
-        public abstract byte[] toBinary();
+        //public abstract string ToString();
+        public abstract byte[] ToBinary();
     }
 
 }

@@ -45,7 +45,6 @@
     <Compile Include="IconImage.cs" />
     <Compile Include="IconImages.cs" />
     <Compile Include="Lane.cs" />
-    <Compile Include="Lanes.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="LogArea.cs" />
     <Compile Include="LogBlock.cs" />
@@ -55,7 +54,7 @@
     <Compile Include="LogDetailTest2.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="LogID.cs" />
-    <Compile Include="LogIDs.cs" />
+    <Compile Include="LogReader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\TimeCountByPerformanceCounter.cs" />

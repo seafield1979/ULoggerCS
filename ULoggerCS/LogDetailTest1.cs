@@ -40,7 +40,7 @@ namespace ULoggerCS
         }
 
         // 詳細情報をstringに変換して返す
-        override public string toString()
+        override public string ToString()
         {
             StringBuilder sb = new StringBuilder(detailText);
 
@@ -55,12 +55,17 @@ namespace ULoggerCS
 
         public override string dataTypeString()
         {
-            return "detail_type:str";
+            return "text";
         }
 
-        public override byte[] toBinary()
+        public override byte dataTypeByte()
         {
-            return null;
+            return (byte)(DetailDataType.Text);
+        }
+
+        public override byte[] ToBinary()
+        {
+            return Encoding.UTF8.GetBytes(detailText);
         }
     }
 }

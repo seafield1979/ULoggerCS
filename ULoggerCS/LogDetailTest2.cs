@@ -49,7 +49,7 @@ namespace ULoggerCS
             return copy1;
         }
 
-        override public string toString()
+        override public string ToString()
         {
             StringBuilder sb = new StringBuilder();
             
@@ -67,13 +67,17 @@ namespace ULoggerCS
 
         public override string dataTypeString()
         {
-            return "detail_type:array";
+            return "array";
         }
 
-        public override byte[] toBinary()
+        public override byte dataTypeByte()
         {
-            // TODO: toBinaryは未実装
-            return null;
+            return (byte)DetailDataType.Array;
+        }
+
+        public override byte[] ToBinary()
+        {
+            return Encoding.UTF8.GetBytes(this.ToString());
         }
     }
 }

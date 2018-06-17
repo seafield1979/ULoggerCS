@@ -1,1 +1,7 @@
 *.pdb
+ULoggerCS/bin/Debug/
+.vs/ULoggerCS/v15/Server/sqlite3/storage.ide-wal
+.vs/ULoggerCS/v15/Server/sqlite3/storage.ide-shm
+.vs/ULoggerCS/v15/Server/sqlite3/storage.ide
+.vs/ULoggerCS/v15/Server/sqlite3/db.lock
+ULoggerCS/obj/Debug/
