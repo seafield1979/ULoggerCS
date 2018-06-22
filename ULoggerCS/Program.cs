@@ -12,8 +12,8 @@ namespace ULoggerCS
     {
         static void Main(string[] args)
         {
-            //TestWrite1();
-            TestRead1();
+            TestWrite1();
+            //TestRead1();
 
             // 入力待ち 
             string input1 = Console.ReadLine();

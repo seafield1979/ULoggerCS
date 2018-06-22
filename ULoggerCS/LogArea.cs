@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 namespace ULoggerCS
 {
     /*
-     * area,name:"エリア1",parent:"root",type:"dir"
-     * area,name:"エリア2",parent:"エリア1",type:"data",color:#00ff00
+     * area,name:"エリア1",parent:"root"
+     * area,name:"エリア2",parent:"エリア1",color:#00ff00
      */
     class LogArea : Log
     {
@@ -57,7 +57,7 @@ namespace ULoggerCS
         override public string ToString()
         {
             // area,name: "エリア1",parent: "root",color:FF112233
-            return String.Format("area,name:\"{0}\",parent:\"{1}\",color={2:X8}", name, parentName, color);
+            return String.Format("area,name:\"{0}\",parent:\"{1}\",color:{2:X8}", name, parentName, color);
         }
 
         override public byte[] ToBinary()

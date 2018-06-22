@@ -16,7 +16,7 @@ namespace ULoggerCS
         public Lanes lanes = null;
         public LogIDs logIDs = null;
         public IconImages images;
-        public List<LogData> logs = null;
+        public MemLogAreaManager areaManager = new MemLogAreaManager();
         public Encoding encoding;
 
         //public string        
@@ -118,7 +118,7 @@ namespace ULoggerCS
                     }
                     else
                     {
-                        //logs = GetLogData(txtParser);
+                        areaManager = GetLogData(txtParser);
                     }
                 }
             }
@@ -266,12 +266,144 @@ namespace ULoggerCS
          * <body>～</body> の中の行をすべて取得する
          * 
          */
-        private Logs GetLogData(TextFieldParser parser)
+        private MemLogAreaManager GetLogData(TextFieldParser parser)
         {
-            Logs _logs = new Logs();
+            MemLogAreaManager manager = new MemLogAreaManager();
 
+            while (!parser.EndOfData)
+            {
+                string[] fields = parser.ReadFields();
+
+                if (fields.Length == 0)
+                {
+                    continue;
+                }
+                string firstField = fields[0].Trim();
+                // 終了判定
+                switch (firstField)
+                {
+                    case "</body>":
+                        return manager;
+                    case "area":
+                        // 順不同
+                        break;
+                    case "log":
+                        MemLogData log = GetMemLog(fields);
+                        manager.AddLogData(log);
+                        break;
+                }
+            }
 
             return null;
+        }
+
+        /**
+         * 1行分のフィールドからエリアデータを取得する
+         * @input fields:
+         * @output  取得したエリアデータ
+         */
+        private static MemLogArea GetMemArea(string[] fields, MemLogAreaManager manager)
+        {
+            MemLogArea area = new MemLogArea();
+
+            foreach (string field in fields)
+            {
+                string[] splitted = field.Split(':');
+                if (splitted.Length == 2)
+                {
+                    switch (splitted[0].ToLower())
+                    {
+                        case "name":
+                            area.Name = splitted[1];
+                            break;
+                        case "parent":
+                            area.ParentArea = manager.searchArea(splitted[1]);
+                            break;
+                        case "color":
+                            area.Color = Convert.ToUInt32(splitted[1], 16);
+                            break;
+                        case "image":       // todo
+                            break;
+                    }
+                    // area,name:"area1",parent:"root",color=FF000000
+                }
+            }
+            return area;
+        }
+
+        /**
+         * 1行分のフィールドからログデータを取得する
+         * @input fields:
+         * @output  取得したログデータ
+         */ 
+        private static MemLogData GetMemLog(string[] fields)
+        {
+            MemLogData log = new MemLogData();
+
+            foreach (string field in fields)
+            {
+                string[] splitted = field.Split(':');
+                if (splitted.Length == 2)
+                {
+                    switch (splitted[0].ToLower())
+                    {
+                        //log,type: Single,id: 1,lane: 1,time: 0.0026799596,text: "test1"
+                        case "type":
+                            switch (splitted[1].ToLower()) {
+                                case "single":               // 単体ログ
+                                    log.Type = MemLogType.Point;
+                                    break;
+                                case "areastart":            // 範囲開始
+                                    log.Type = MemLogType.RangeStart;
+                                    break;
+                                case "areaend":              // 範囲終了
+                                    log.Type = MemLogType.RangeEnd;
+                                    break;
+                                case "value":                // 値
+                                    log.Type = MemLogType.Value;
+                                    break;
+                            }
+                            break;
+                        case "id":
+                            log.ID = UInt32.Parse(splitted[1]);
+                            break;
+                        case "lane":
+                            log.LaneId = Byte.Parse(splitted[1]);
+                            break;
+                        case "time":
+                            log.Time1 = Double.Parse(splitted[1]);
+                            break;
+                        case "text":
+                            log.Text = splitted[1];
+                            break;
+                        case "color":
+                            log.Color = Convert.ToUInt32(splitted[1], 16);
+                            break;
+                        case "detail_type":
+                            switch(splitted[1].ToLower())
+                            {
+                                case "text":
+                                    log.DetailType = DetailDataType.Text;
+                                    break;
+                                case "array":
+                                    log.DetailType = DetailDataType.Array;
+                                    break;
+                                case "dictionary":
+                                    log.DetailType = DetailDataType.Dictionary;
+                                    break;
+                                case "json":
+                                    log.DetailType = DetailDataType.JSON;
+                                    break;
+                            }
+                            log.DetailType = DetailDataType.Text;
+                            break;
+                        case "detail":
+                            log.Detail = splitted[1];
+                            break;
+                    }
+                }
+            }
+            return log;
         }
 
         /**

@@ -15,7 +15,7 @@ namespace ULoggerCS
         // Properties
         //
         private int logId;              // log id
-        private LogType logType;     // type of log
+        private LogType logType;        // type of log
         private int laneId;             // lane id
         private string text;            // text
         private double time;            // time of log
@@ -64,7 +64,7 @@ namespace ULoggerCS
             }
             if (detail != null)
             {
-                sb.Append( String.Format( @",detail_type:{0},""{1}""", detail.dataTypeString(), detail.ToString()));
+                sb.Append( String.Format( @",detail_type:{0},detail:""{1}""", detail.dataTypeString(), detail.ToString()));
             }
 
             return sb.ToString();
@@ -83,11 +83,19 @@ namespace ULoggerCS
             data.Add((byte)logType);
             // 表示レーンID
             data.AddRange(BitConverter.GetBytes(laneId));
-            //タイトルの長さ
-            byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
-            data.AddRange(BitConverter.GetBytes(textData.Length));
-            //タイトル
-            data.AddRange(textData);
+
+            if (text == null)
+            {
+                //タイトルの長さ
+                data.AddRange(BitConverter.GetBytes((UInt32)0));
+            }
+            else {
+                //タイトルの長さ
+                byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
+                data.AddRange(BitConverter.GetBytes(textData.Length));
+                //タイトル
+                data.AddRange(textData);
+            }
             //時間
             data.AddRange(BitConverter.GetBytes(time));
             if (detail == null)
