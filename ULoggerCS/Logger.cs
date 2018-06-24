@@ -110,7 +110,7 @@ namespace ULoggerCS
             InitTimer();
 
             // デフォルトのファイル名
-            logFilePath = @".\default.log";
+            logFilePath = @".\default.ulog";
 
             // レーン情報を登録
             lanes = new Lanes();

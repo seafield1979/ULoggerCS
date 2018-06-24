@@ -85,6 +85,7 @@ namespace ULoggerCS
             timeEnd = 0;
             childArea = null;
             logs = null;
+
         }
 
         //
@@ -115,6 +116,57 @@ namespace ULoggerCS
             logs.Add(logData);
         }
 
+        /**
+         * コンソールログに出力する
+         * 子エリアも同時に出力するため、再帰呼び出しを行う。
+         */
+        override public string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("area name:{0} ", name);
+            sb.AppendFormat(" color:{0:X8}", color);
+            sb.AppendFormat(" timeStart:{0}", timeStart);
+            if (timeEnd != 0)
+            {
+                sb.Append(String.Format(" timeEnd:{0}", timeEnd));
+            }
+            if (imageName != null)
+            {
+                sb.Append(String.Format(" imageName:{0}", imageName));
+            }
+
+            if (parentArea != null)
+            {
+                //sb.Append(String.Format(" paretArea:{0}", parentArea));
+            }
+
+            // ログデータ
+            if (logs != null)
+            {
+                foreach (var log in logs)
+                {
+                    sb.AppendLine(log.ToString());
+                }
+            }
+
+            // 子エリア
+            if (childArea != null)
+            {
+                foreach( MemLogArea area in childArea)
+                {
+                    sb.Append(area.ToString());
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        public void Print()
+        {
+            Console.WriteLine(this);
+        }
+
     }  // class MemLogArea
 
     //
@@ -141,41 +193,46 @@ namespace ULoggerCS
         public MemLogAreaManager()
         {
             rootArea = new MemLogArea();
+            lastAddArea = rootArea;
         }
 
         //
         // Methods
         //
         /**
-         * 追加先を指定しないでエリアを追加
-         * 
-         * @input logArea:  追加するログエリア
-         */
-        public void AddArea(MemLogArea logArea)
-        {
-            // 最後に追加したエリアと同じ階層（同じ親の下）に追加する
-            if (lastAddArea != null)
-            {
-                lastAddArea.ParentArea.AddChildArea(logArea); 
-            }
-            else
-            {
-                rootArea.AddChildArea(logArea);
-            }
-        }
-
-        /**
          * 追加先を指定してエリアを追加
          * 
          * @input logArea: 追加するログエリア
          * @input parentName: 追加先の親エリア名
          */
-        public void AddArea(MemLogArea logArea, string parentName)
+        public void AddArea(MemLogArea logArea, MemLogArea parentArea)
         {
-            // 追加先のエリアを探す
-            MemLogArea addArea = searchArea(parentName);
+            if (parentArea == null)
+            {
+                // 最後に追加したエリアと同じ階層（同じ親の下）に追加する
+                if (lastAddArea != null)
+                {
+                    if (lastAddArea.ParentArea != null)
+                    {
+                        lastAddArea.ParentArea.AddChildArea(logArea);
+                    }
+                    else
+                    {
+                        rootArea.AddChildArea(logArea);
+                    }
+                }
+                else
+                {
+                    rootArea.AddChildArea(logArea);
+                }
+            }
+            else
+            {
+                // 指定した親の下に追加
+                parentArea.AddChildArea(logArea);
+            }
 
-            addArea.AddChildArea(logArea);
+            lastAddArea = logArea;
         }
 
         /**
@@ -212,6 +269,11 @@ namespace ULoggerCS
 
             // 見つからなかった場合はルート
             return rootArea;
+        }
+
+        public void Print()
+        {
+            rootArea.Print();
         }
     }
 }

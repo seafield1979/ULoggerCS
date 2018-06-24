@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArgsDictionary.cs" />
     <Compile Include="IconImage.cs" />
     <Compile Include="IconImages.cs" />
     <Compile Include="Lane.cs" />

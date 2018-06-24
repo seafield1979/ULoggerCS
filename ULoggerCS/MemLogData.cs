@@ -177,5 +177,34 @@ namespace ULoggerCS
             this.detailType = detailType;
             this.detail = detailText;
         }
+
+        /**
+         * 文字列に変換
+         */
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("data id:{0}", id);
+            sb.AppendFormat(" type:{0}", type.ToString());
+            sb.AppendFormat(" laneId:{0}", laneId);
+            sb.AppendFormat(" time1:{0}", time1);
+            if (time2 != 0)
+            {
+                sb.AppendFormat(" time2:{0}", time2);
+            }
+            sb.AppendFormat(" text:{0}", text);
+            sb.AppendFormat(" detailType:{0}", detailType);
+            sb.AppendFormat(" detailText:{0}", detail);
+
+            return sb.ToString();
+        }
+        /*
+         * コンソールログ出力
+         */
+        public void Print()
+        {
+            Console.WriteLine(this);
+        }
     }
 }

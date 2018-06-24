@@ -15,9 +15,16 @@ namespace ULoggerCS
     {
         public Lanes lanes = null;
         public LogIDs logIDs = null;
-        public IconImages images;
+        public IconImages images = null;
         public MemLogAreaManager areaManager = new MemLogAreaManager();
         public Encoding encoding;
+
+        public MemLogAreaManager AreaManager
+        {
+            get { return areaManager; }
+            set { areaManager = value; }
+        }
+
 
         //public string        
 
@@ -43,6 +50,8 @@ namespace ULoggerCS
             {
                 ReadLogFileBin(inputFilePath);
             }
+            areaManager.Print();
+            
             return true;
         }
 
@@ -152,7 +161,7 @@ namespace ULoggerCS
                 }
 
                 // 終了判定
-                if (fields[0].Trim().Equals("</logids>"))
+                if (fields[0].Trim().Equals("</logid>"))
                 {
                     break;
                 }
@@ -285,7 +294,8 @@ namespace ULoggerCS
                     case "</body>":
                         return manager;
                     case "area":
-                        // 順不同
+                        MemLogArea area = GetMemArea(fields, manager);
+                        manager.AddArea(area, area.ParentArea);
                         break;
                     case "log":
                         MemLogData log = GetMemLog(fields);
@@ -335,7 +345,9 @@ namespace ULoggerCS
          * 1行分のフィールドからログデータを取得する
          * @input fields:
          * @output  取得したログデータ
-         */ 
+         *  Sample
+         *  log,type: Single,id: 1,lane: 1,time: 0.0026799596,text: "test1"
+         */
         private static MemLogData GetMemLog(string[] fields)
         {
             MemLogData log = new MemLogData();
@@ -347,7 +359,6 @@ namespace ULoggerCS
                 {
                     switch (splitted[0].ToLower())
                     {
-                        //log,type: Single,id: 1,lane: 1,time: 0.0026799596,text: "test1"
                         case "type":
                             switch (splitted[1].ToLower()) {
                                 case "single":               // 単体ログ

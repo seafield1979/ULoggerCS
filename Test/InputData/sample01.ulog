@@ -1,0 +1,41 @@
+<head>
+encoding:UTF8
+<lane>
+	id:1,name:"lane1",color:FF000000
+	id:2,name:"lane2",color:FF000000
+	id:3,name:"lane3",color:FF000000
+	id:4,name:"lane4",color:FF000000
+</lane>
+<logid>
+	id:1,name:"id1",color:FF000000
+	id:2,name:"id2",color:FF000000
+	id:3,name:"id3",color:FF000000
+	id:4,name:"id4",color:FF000000
+</logid>
+</head>
+<body>
+area,name:"area1",parent:"root",color:FF000000
+log,type:Single,id:1,lane:1,time:0.0033392912,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035237189,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035252739,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035258959,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035265179,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035271399,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035277620,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035283840,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035290060,text:"test1"
+log,type:Single,id:1,lane:1,time:0.0035293170,text:"test1"
+area,name:"area1-2",parent:"area1",color:FF000000
+log,type:Single,id:1,lane:1,time:0.5165936679,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167298894,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167311334,text:"test2",detail_type:text,detail:"hoge123"
+area,name:"area1-3",parent:"area1",color:FF000000
+log,type:Single,id:1,lane:1,time:0.5167320664,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167326884,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167333105,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167339325,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167348655,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167354875,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:0.5167361095,text:"test2",detail_type:text,detail:"hoge123"
+log,type:Single,id:1,lane:1,time:1.0175442634,text:"test3",detail_type:array,detail:"[0]:10,[1]:2,[2]:3,[3]:4,[4]:5,[5]:6,[6]:7,[7]:8,[8]:9,[9]:10"
+</body>

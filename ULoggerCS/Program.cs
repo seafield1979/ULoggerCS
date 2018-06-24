@@ -12,25 +12,36 @@ namespace ULoggerCS
     {
         static void Main(string[] args)
         {
-            TestWrite1();
-            //TestRead1();
+            MyArgs myArgs = MyArgs.GetMyArgs(args);
+            Console.WriteLine(myArgs);
 
+            if (myArgs.IsReadMode)
+            {
+                TestRead1(myArgs.FilePath, myArgs.FileType);
+            }
+            else { 
+                TestWrite1(myArgs.FilePath, myArgs.FileType);
+            }
+            
             // 入力待ち 
             string input1 = Console.ReadLine();
 
         }
 
-        public static void TestWrite1()
+
+        /**
+         * ログファイルに書き込む
+         * 
+         * @input outputFilePath: 書き込み先のファイルパス
+         * @input fileType: 書き込むファイルの種類(テキスト or バイナリ)
+         */
+        public static void TestWrite1(string outputFilePath, LogFileType fileType)
         {
             // Loggerを作成
             Logger logger = new Logger();
-#if true
-            logger.FileType = LogFileType.Text;       // バイナリ形式で保存
-            logger.LogFilePath = @".\default.log";
-#else
-            logger.FileType = LogFileType.Binary;       // バイナリ形式で保存
-            logger.LogFilePath = @".\default_log.dat";
-#endif
+
+            logger.FileType = fileType;
+            logger.LogFilePath = outputFilePath;
 
             // ヘッダー情報を追加
             logger.AddLogID(1, "id1", UColor.Black);
@@ -79,15 +90,23 @@ namespace ULoggerCS
             logger.WriteBody();
         }
 
-        public static void TestRead1()
+        /**
+         * ログファイルを読み込む
+         * 
+         * @input inputFilePath: 入力ログファイルのパス
+         */
+        public static void TestRead1(string inputFilePath, LogFileType fileType)
         {
             // Loggerを作成
             LogReader reader = new LogReader();
 
-            reader.ReadLogFile(@".\default.log", LogFileType.Text);
+            reader.ReadLogFile(inputFilePath, fileType);
 
             Console.WriteLine("TestRead1 finished!!");
         }
+
+
+        
     }
 
     
