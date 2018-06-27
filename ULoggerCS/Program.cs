@@ -60,25 +60,29 @@ namespace ULoggerCS
             // ログを追加
             for (int i = 0; i < 10; i++)
             {
-                logger.AddLogData(1, LogType.Single, 1, "test1");
+                logger.AddLogData(1, LogDataType.Single, 1, "test1");
             }
 
             System.Threading.Thread.Sleep(500);
+
+            // エリアを追加
+            logger.AddArea("area1-2", "area1");
 
             // 詳細ありのログを追加
             for (int i = 0; i < 10; i++)
             {
                 LogDetailTest1 detail = new LogDetailTest1();
                 detail.DetailText = "hoge123";
-                logger.AddLogData(1, LogType.Single, 1, "test2", detail);
+                logger.AddLogData(1, LogDataType.Single, 1, "test2", detail);
             }
             System.Threading.Thread.Sleep(500);
 
             // 詳細ありのログ２を追加
+            logger.AddArea("area1-3", "area1");
             LogDetailTest2 detail2 = new LogDetailTest2();
             detail2.Init();
             detail2.setArray1(0, 10);
-            logger.AddLogData(1, LogType.Single, 1, "test3", detail2);
+            logger.AddLogData(1, LogDataType.Single, 1, "test3", detail2);
 
             System.Threading.Thread.Sleep(500);
 
@@ -104,9 +108,6 @@ namespace ULoggerCS
 
             Console.WriteLine("TestRead1 finished!!");
         }
-
-
-        
     }
 
     

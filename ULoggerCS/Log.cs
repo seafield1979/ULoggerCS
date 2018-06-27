@@ -18,14 +18,21 @@ namespace ULoggerCS
         public const UInt32 Gray = 0xFF808080;
     }
 
-    // Type of Log
-    // ログの種別
+    // 本体以下のログの種類
     public enum LogType : byte
     {
-        Single = 0, //E_LOG_SINGLE = 0,               // 単体ログ
-        AreaStart,  //E_LOG_AREA_ST,                  // 範囲開始
-        AreaEnd,    //E_LOG_AREA_END,                 // 範囲終了
-        Value       // E_LOG_VALUE                     // 値
+        Data = 1,       // データ
+        Area = 2        // エリア
+    }
+
+    // Type of Log
+    // ログの種別
+    public enum LogDataType : byte
+    {
+        Single = 0,    // 単体ログ
+        RangeStart,    // 範囲開始
+        RangeEnd,      // 範囲終了
+        Value          // 値
     }
 
     // 抽象クラス

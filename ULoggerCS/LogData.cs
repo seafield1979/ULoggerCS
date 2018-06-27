@@ -15,7 +15,7 @@ namespace ULoggerCS
         // Properties
         //
         private int logId;              // log id
-        private LogType logType;        // type of log
+        private LogDataType logType;    // type of log data
         private int laneId;             // lane id
         private string text;            // text
         private double time;            // time of log
@@ -26,7 +26,7 @@ namespace ULoggerCS
         {
 
         }
-        public LogData(double _time, int _logId, int _laneId, LogType _logType, string _text, LogDetail _detail)
+        public LogData(double _time, int _logId, int _laneId, LogDataType _logType, string _text, LogDetail _detail)
         {
             time = _time;
             logId = _logId;
@@ -77,6 +77,8 @@ namespace ULoggerCS
         {
             List<byte> data = new List<byte>(1000);
 
+            // データログ
+            data.Add((byte)LogType.Data);
             // ログID
             data.AddRange(BitConverter.GetBytes(logId));
             // ログタイプ

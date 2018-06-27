@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Collections.Generic;
 using Microsoft.VisualBasic.FileIO;
+using ULoggerCS.Utility;
 
 /**
  * ULogView用のログファイルを読み込んでメモリに展開するクラス
@@ -13,6 +14,13 @@ namespace ULoggerCS
 
     class LogReader
     {
+        //
+        // Consts
+        //
+        private const int ID_NAME_MAX = 64;         // ID名のByte数
+        private const int LANE_NAME_MAX = 64;       // レーン名のByte数
+        private const int IMAGE_NAME_MAX = 64;      // 画像名のByte数
+
         public Lanes lanes = null;
         public LogIDs logIDs = null;
         public IconImages images = null;
@@ -55,6 +63,8 @@ namespace ULoggerCS
             return true;
         }
 
+        #region Text
+
         /**
          * テキスト形式のログファイルを読み込んでメモリに展開する
          * @input inputFilePath: ログファイルのパス
@@ -65,7 +75,7 @@ namespace ULoggerCS
             bool isHeader = false;
             
             // まずはヘッダ部分からエンコードタイプを取得する
-            encoding = GetEncoding(inputFilePath);
+            encoding = GetEncodingText(inputFilePath);
 
             using (TextFieldParser txtParser = new TextFieldParser(inputFilePath, encoding))
             {
@@ -99,10 +109,10 @@ namespace ULoggerCS
                         switch (line)
                         {
                             case "<lane>":
-                                lanes = GetLanes(txtParser);
+                                lanes = GetLanesText(txtParser);
                                 break;
                             case "<logid>":
-                                logIDs = GetLogIDs(txtParser);
+                                logIDs = GetLogIDsText(txtParser);
                                 break;
                             case "<images>":
                                 break;
@@ -127,7 +137,7 @@ namespace ULoggerCS
                     }
                     else
                     {
-                        areaManager = GetLogData(txtParser);
+                        areaManager = GetLogDataText(txtParser);
                     }
                 }
             }
@@ -135,19 +145,9 @@ namespace ULoggerCS
         }
 
         /**
-         * バイナリ形式のログファイルを読み込んでメモリに展開する
-         * @input inputFilePath: ログファイルのパス
-         * @output : true:成功 / false:失敗
-         */
-        private bool ReadLogFileBin(string inputFilePath)
-        {
-            return true;
-        }
-
-        /**
          * LogID情報を取得する
          */
-        private LogIDs GetLogIDs(TextFieldParser parser)
+        private LogIDs GetLogIDsText(TextFieldParser parser)
         {
             LogIDs _logIDs = new LogIDs();
 
@@ -205,7 +205,7 @@ namespace ULoggerCS
          * Lane情報を取得する
          * <lane>～</lane> の中を行をすべて取得する
          */
-        private Lanes GetLanes(TextFieldParser parser)
+        private Lanes GetLanesText(TextFieldParser parser)
         {
             Lanes _lanes = new Lanes();
 
@@ -238,7 +238,7 @@ namespace ULoggerCS
                                 UInt32 id;
                                 if (UInt32.TryParse(splitted[1], out id))
                                 {
-                                    lane.Id = id;
+                                    lane.ID = id;
                                 }
                                 break;
                             case "name":
@@ -265,7 +265,7 @@ namespace ULoggerCS
         /**
          * １行分のIconImage情報を取得する
          */
-        private IconImages GetIconImages(TextFieldParser parser)
+        private IconImages GetIconImagesText(TextFieldParser parser)
         {
             return null;
         }
@@ -275,7 +275,7 @@ namespace ULoggerCS
          * <body>～</body> の中の行をすべて取得する
          * 
          */
-        private MemLogAreaManager GetLogData(TextFieldParser parser)
+        private MemLogAreaManager GetLogDataText(TextFieldParser parser)
         {
             MemLogAreaManager manager = new MemLogAreaManager();
 
@@ -294,11 +294,11 @@ namespace ULoggerCS
                     case "</body>":
                         return manager;
                     case "area":
-                        MemLogArea area = GetMemArea(fields, manager);
+                        MemLogArea area = GetMemAreaText(fields, manager);
                         manager.AddArea(area, area.ParentArea);
                         break;
                     case "log":
-                        MemLogData log = GetMemLog(fields);
+                        MemLogData log = GetMemLogText(fields);
                         manager.AddLogData(log);
                         break;
                 }
@@ -312,7 +312,7 @@ namespace ULoggerCS
          * @input fields:
          * @output  取得したエリアデータ
          */
-        private static MemLogArea GetMemArea(string[] fields, MemLogAreaManager manager)
+        private static MemLogArea GetMemAreaText(string[] fields, MemLogAreaManager manager)
         {
             MemLogArea area = new MemLogArea();
 
@@ -348,7 +348,7 @@ namespace ULoggerCS
          *  Sample
          *  log,type: Single,id: 1,lane: 1,time: 0.0026799596,text: "test1"
          */
-        private static MemLogData GetMemLog(string[] fields)
+        private static MemLogData GetMemLogText(string[] fields)
         {
             MemLogData log = new MemLogData();
 
@@ -365,10 +365,10 @@ namespace ULoggerCS
                                     log.Type = MemLogType.Point;
                                     break;
                                 case "areastart":            // 範囲開始
-                                    log.Type = MemLogType.RangeStart;
+                                    log.Type = MemLogType.Range;
                                     break;
                                 case "areaend":              // 範囲終了
-                                    log.Type = MemLogType.RangeEnd;
+                                    log.Type = MemLogType.Range;
                                     break;
                                 case "value":                // 値
                                     log.Type = MemLogType.Value;
@@ -423,7 +423,7 @@ namespace ULoggerCS
          * @input inputFilePath:  LogViewのファイルパス
          * @output エンコードの種類
          */
-        public static Encoding GetEncoding(string inputFilePath)
+        public static Encoding GetEncodingText(string inputFilePath)
         {
             bool isHeader = false;
             int count = 0;
@@ -457,35 +457,12 @@ namespace ULoggerCS
                             string[] splitted = line.Split(':');
                             if (splitted.Length >= 2)
                             {
-                                switch (splitted[1].ToLower())
-                                {
-                                    case "ascii":
-                                        encoding = Encoding.ASCII;
-                                        break;
-                                    case "utf7":
-                                    case "utf-7":
-                                        encoding = Encoding.UTF7;
-                                        break;
-                                    case "utf8":
-                                    case "utf-8":
-                                        encoding = Encoding.UTF8;
-                                        break;
-                                    case "utf32":
-                                    case "utf-32":
-                                        encoding = Encoding.UTF32;
-                                        break;
-                                    case "unicode":
-                                        encoding = Encoding.Unicode;
-                                        break;
-                                    default:
-                                        encoding = Encoding.GetEncoding(splitted[1]);
-                                        break;
-                                }
+                                encoding = GetEncodingFromStr(splitted[1].ToLower());
                             }
                         }
                     }
                     count++;
-                    if (count > 1000)
+                    if (count > 100)
                     {
                         // ファイルの先頭部分に見つからなかったので打ち切り
                         break;
@@ -494,6 +471,265 @@ namespace ULoggerCS
                 return encoding;
             }
         }  // GetEncoding()
+
+        /**
+         * テキストからエンコーディングを取得する
+         * @input encStr: エンコード名
+         */
+        private static Encoding GetEncodingFromStr(string encStr)
+        {
+            Encoding encoding = Encoding.UTF8;      // デフォルトのエンコード
+
+            switch (encStr)
+            {
+                case "ascii":
+                    encoding = Encoding.ASCII;
+                    break;
+                case "utf7":
+                case "utf-7":
+                    encoding = Encoding.UTF7;
+                    break;
+                case "utf8":
+                case "utf-8":
+                    encoding = Encoding.UTF8;
+                    break;
+                case "utf32":
+                case "utf-32":
+                    encoding = Encoding.UTF32;
+                    break;
+                case "unicode":
+                    encoding = Encoding.Unicode;
+                    break;
+                default:
+                    encoding = Encoding.GetEncoding(encStr);
+                    break;
+            }
+            return encoding;
+        }
+
+        #endregion
+
+        #region Binary
+        /**
+         * バイナリ形式のログファイルを読み込んでメモリに展開する
+         * @input inputFilePath: ログファイルのパス
+         * @output : true:成功 / false:失敗
+         */
+        private bool ReadLogFileBin(string inputFilePath)
+        {
+            using (var fs = new UFileStream(inputFilePath, FileMode.Open, FileAccess.Read))
+            {
+                try
+                {
+                    // Header
+                    ReadLogHeadBin(fs);
+
+                    // Body
+                    ReadLogBodyBin(fs);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error ReadLogFileBin " + e.Message);
+                    throw;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * バイナリログのヘッダ部分を取得
+         * @input fs : ファイルオブジェクト
+         * 
+         */ 
+        private void ReadLogHeadBin(UFileStream fs)
+        {
+            byte[] buffer = new byte[100];
+            int offset = 0;
+            
+            // 文字コードを取得
+            string encStr = fs.GetSizeString();
+            this.encoding = GetEncodingFromStr(encStr);
+            
+            // ログID情報
+            ReadLogIDsBin(fs);
+
+            // レーン情報
+            ReadLogLanesBin(fs);
+
+            // アイコン画像
+            ReadLogImagesBin(fs);
+        }
+
+        /**
+         * バイナリログのログID情報を読み込む
+         * 
+         */
+        private void ReadLogIDsBin(UFileStream fs)
+        {
+            byte[] buffer = new byte[100];
+            // 件数取得
+            int size = fs.GetInt32();
+
+            for (int i = 0; i < size; i++)
+            {
+                // 1件分のログを取得
+                LogID logId = new LogID();
+
+                // ID
+                logId.ID = fs.GetUInt32();
+
+                // 名前
+                logId.Name = fs.GetSizeString();
+
+                // 色
+                logId.Color = fs.GetUInt32();
+
+                // アイコン画像名
+                logId.ImageName = fs.GetSizeString();
+
+                logIDs.Add(logId);
+            }
+        }
+
+        /**
+         * バイナリログのレーン情報を読み込む
+         * 
+         */
+        private void ReadLogLanesBin(UFileStream fs)
+        {
+            // 件数取得
+            byte[] buffer = new byte[100];
+            // 件数取得
+            int size = fs.GetInt32();
+
+            for (int i = 0; i < size; i++)
+            {
+                // 1件分のログを取得
+                Lane lane = new Lane();
+
+                // ID
+                lane.ID = fs.GetUInt32();
+
+                // 名前
+                lane.Name = fs.GetSizeString();
+
+                // 色
+                lane.Color = fs.GetUInt32();
+
+                lanes.Add(lane);
+            }
+        }
+
+        /**
+         * バイナリログの画像ID情報を読み込む
+         */
+        private void ReadLogImagesBin(UFileStream fs)
+        {
+            
+        }
+
+        /**
+         * バイナリログの本体部分を取得
+         * @input fs : ファイルオブジェクト
+         */
+        private void ReadLogBodyBin(UFileStream fs)
+        {
+            // エリア、ログ
+
+            // 件数取得
+            byte[] buffer = new byte[100];
+
+            // 件数取得
+            int logNum = fs.GetInt32();
+
+            for(int i=0; i< logNum; i++)
+            {
+                // 種類を取得
+                LogType type = (LogType)fs.GetByte();
+
+                if (type == LogType.Data)
+                {
+                    ReadLogDataBin(fs);
+                }
+                else
+                {
+                    ReadLogAreaBin(fs);
+                }
+            }
+        }
+
+        /**
+         * バイナリログデータを読み込む
+         */
+        private void ReadLogDataBin(UFileStream fs)
+        {
+            byte[] buf = new byte[100];
+
+            MemLogData log = new MemLogData();
+
+            // ログID
+            log.ID = fs.GetUInt32();
+
+            //ログタイプ
+            bool isRangeEnd = false;
+            LogDataType dataType = (LogDataType)fs.GetByte();
+            
+            switch (dataType) {
+                case LogDataType.Single:
+                    log.Type = MemLogType.Point;
+                    break;
+                case LogDataType.RangeStart:
+                    log.Type = MemLogType.Range;
+                    break;
+                case LogDataType.RangeEnd:
+                    // 同じレーンの Range タイプのログに結合する
+                    // todo
+                    isRangeEnd = true;
+                    break;
+                case LogDataType.Value:
+                    log.Type = MemLogType.Value;
+                    break;
+            }
+
+            //表示レーンID
+            log.LaneId = fs.GetByte();
+
+            //タイトルの長さ
+            //タイトル
+            log.Text = fs.GetSizeString();
+
+            // 範囲ログの終了タイプの場合、結合する
+
+            //時間
+            Double time = fs.GetDouble();
+            if (log.Type == MemLogType.Range && isRangeEnd == true)
+            {
+                // 1つ前の Rangeタイプの Time2 に時間を設定
+                // todo
+                return;
+            }
+            else
+            {
+                log.Time1 = time;
+            }
+
+            //ログデータ（詳細）の種類
+            log.DetailType = (DetailDataType)fs.GetByte();
+
+            //ログデータ(詳細)のサイズ
+            //ログデータ(詳細)
+            log.Detail = fs.GetSizeString();
+        }
+
+        /**
+         * バイナリエリアデータを読み込む
+         */
+        private void ReadLogAreaBin(UFileStream fs)
+        {
+
+        }
+
+        #endregion
 
     }
 }

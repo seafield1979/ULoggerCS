@@ -196,7 +196,7 @@ namespace ULoggerCS
         }
 
         // ログID, ログ名, ログ種別, レーンID(or レーン名), ログ詳細(文字列))
-        public bool AddLogData(int logId, LogType logType, int laneId, string title)
+        public bool AddLogData(int logId, LogDataType logType, int laneId, string title)
         {
             string text = null;
             if (title != null)
@@ -206,7 +206,7 @@ namespace ULoggerCS
             return AddLogData(logId, logType, laneId, text, null);
         }
 
-        public bool AddLogData(int logId, LogType logType, int laneId, string title, LogDetail logDetail)
+        public bool AddLogData(int logId, LogDataType logType, int laneId, string title, LogDetail logDetail)
         {
             // ログを追加
             LogData data = new LogData(GetTime(), logId, laneId, logType, title, logDetail);

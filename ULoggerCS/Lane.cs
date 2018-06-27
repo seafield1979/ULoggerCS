@@ -27,7 +27,7 @@ namespace ULoggerCS
         }
 
 
-        public UInt32 Id
+        public UInt32 ID
         {
             get { return id; }
             set { id = value; }
@@ -59,6 +59,9 @@ namespace ULoggerCS
         override public byte[] ToBinary()
         {
             List<byte> data = new List<byte>(1000);
+
+            // ID
+            data.AddRange(BitConverter.GetBytes(id));
 
             // レーン名の長さ
             byte[] nameData = Encoding.UTF8.GetBytes(name);

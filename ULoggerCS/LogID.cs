@@ -88,6 +88,9 @@ namespace ULoggerCS
         {
             List<byte> data = new List<byte>(1000);
 
+            // ID
+            data.AddRange(BitConverter.GetBytes(id));
+
             // ID名の長さ
             byte[] nameData = Encoding.UTF8.GetBytes(name);
             data.AddRange(BitConverter.GetBytes(nameData.Length));

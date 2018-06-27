@@ -85,7 +85,6 @@ namespace ULoggerCS
             timeEnd = 0;
             childArea = null;
             logs = null;
-
         }
 
         //
@@ -270,6 +269,7 @@ namespace ULoggerCS
             // 見つからなかった場合はルート
             return rootArea;
         }
+
 
         public void Print()
         {

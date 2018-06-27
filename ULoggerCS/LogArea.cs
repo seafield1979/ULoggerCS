@@ -64,6 +64,9 @@ namespace ULoggerCS
         {
             List<byte> data = new List<byte>(1000);
 
+            // エリアログ
+            data.Add((byte)LogType.Area);
+
             // エリア名の長さ
             byte[] nameData = Encoding.UTF8.GetBytes(name);
             data.AddRange(BitConverter.GetBytes(nameData.Length));

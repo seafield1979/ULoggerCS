@@ -12,10 +12,9 @@ namespace ULoggerCS
     enum MemLogType : byte
     {
         Point,          // 1: 点ログ
-        RangeStart,     // 2: 範囲ログ(開始)
-        RangeEnd,       // 3: 範囲ログ(終了)
-        Value,          // 4: 値ログ (値の遷移をグラフ表示できる)
-        Bind            // 5: 結合ログ (近いログをまとめて表示した状態)
+        Range,          // 2: 範囲ログ
+        Value,          // 3: 値ログ (値の遷移をグラフ表示できる)
+        Bind            // 4: 結合ログ (近いログをまとめて表示した状態)
     }
 
     class MemLogData
