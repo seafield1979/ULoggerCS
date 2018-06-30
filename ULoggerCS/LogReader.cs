@@ -77,21 +77,14 @@ namespace ULoggerCS
             // まずはヘッダ部分からエンコードタイプを取得する
             encoding = GetEncodingText(inputFilePath);
 
-            using (TextFieldParser txtParser = new TextFieldParser(inputFilePath, encoding))
+            using (StreamReader sr = new StreamReader(inputFilePath, encoding))
             {
-                // 区切り文字形式
-                txtParser.TextFieldType = FieldType.Delimited;
-                // デリミタはカンマ
-                txtParser.SetDelimiters(",");
-                // フィールドが引用符で囲まれているか
-                // txtParser.HasFieldsEnclosedInQuotes = true;
-
                 // ヘッダ部分を読み込む <head>～</head>
-                while (!txtParser.EndOfData)
+                while (!sr.EndOfStream)
                 {
                     // ファイルを 1 行ずつ読み込む
-                    string line = txtParser.ReadLine().Trim();
-
+                    string line = sr.ReadLine().Trim();
+                    
                     // <head>の行が見つかるまではスキップ
                     if (isHeader == false)
                     {
@@ -106,17 +99,19 @@ namespace ULoggerCS
                         {
                             break;
                         }
+                        Dictionary<string, string> fields = SplitLineStr(line, ',', ':');
 
                         // ヘッダーの読み込みメイン
                         switch (line)
                         {
                             case "<lane>":
-                                lanes = GetLanesText(txtParser);
+                                lanes = GetLanesText(sr);
                                 break;
                             case "<logid>":
-                                logIDs = GetLogIDsText(txtParser);
+                                logIDs = GetLogIDsText(sr);
                                 break;
-                            case "<images>":
+                            case "<image>":
+                                images = GetIconImagesText(sr);
                                 break;
                         }
                     }
@@ -124,10 +119,10 @@ namespace ULoggerCS
 
                 // 本体部分を読み込む
                 bool isBody = false;
-                while (!txtParser.EndOfData)
+                while (!sr.EndOfStream)
                 {
                     // ファイルを 1 行ずつ読み込む
-                    string line = txtParser.ReadLine().Trim();
+                    string line = sr.ReadLine().Trim();
 
                     // <body>を見つけたら本体の取得モードに入る
                     if (!isBody)
@@ -139,7 +134,7 @@ namespace ULoggerCS
                     }
                     else
                     {
-                        areaManager = GetLogDataText(txtParser);
+                        areaManager = GetLogDataText(sr);
                     }
                 }
             }
@@ -149,21 +144,22 @@ namespace ULoggerCS
         /**
          * LogID情報を取得する
          */
-        private LogIDs GetLogIDsText(TextFieldParser parser)
+        private LogIDs GetLogIDsText(StreamReader sr)
         {
             LogIDs _logIDs = new LogIDs();
 
-            while (!parser.EndOfData)
+            while (!sr.EndOfStream)
             {
-                string[] fields = parser.ReadFields();
+                string line = sr.ReadLine().Trim();
+                Dictionary<string, string> fields = SplitLineStr(line, ',', ':');
                 
-                if (fields.Length == 0)
+                if (fields.Count == 0)
                 {
                     continue;
                 }
 
                 // 終了判定
-                if (fields[0].Trim().Equals("</logid>"))
+                if (line.Equals("</logid>"))
                 {
                     break;
                 }
@@ -171,27 +167,26 @@ namespace ULoggerCS
                 // レーン情報を取得
                 LogID logID = new LogID();
 
-                foreach (string field in fields)
+                foreach (KeyValuePair<string, string> kvp in fields)
                 {
                     // keyとvalueに分割
-                    string[] splitted = field.Split(':');
-                    if (splitted.Length >= 2)
+                    if (kvp.Value != null)
                     {
-                        switch (splitted[0])
+                        switch (kvp.Key)
                         {
                             case "id":
                                 UInt32 id;
-                                if (UInt32.TryParse(splitted[1], out id))
+                                if (UInt32.TryParse(kvp.Value, out id))
                                 {
                                     logID.ID = id;
                                 }
                                 break;
                             case "name":
-                                logID.Name = splitted[1];
+                                logID.Name = kvp.Value;
                                 break;
                             case "color":
                                 // FF001122 のような16進数文字列を整数値に変換
-                                logID.Color = Convert.ToUInt32(splitted[1], 16);
+                                logID.Color = Convert.ToUInt32(kvp.Value, 16);
                                 break;
                             case "image":
                                 break;
@@ -207,20 +202,21 @@ namespace ULoggerCS
          * Lane情報を取得する
          * <lane>～</lane> の中を行をすべて取得する
          */
-        private Lanes GetLanesText(TextFieldParser parser)
+        private Lanes GetLanesText(StreamReader sr)
         {
             Lanes _lanes = new Lanes();
 
-            while(!parser.EndOfData)
+            while(!sr.EndOfStream)
             {
-                string[] fields = parser.ReadFields();
+                string line = sr.ReadLine().Trim();
+                Dictionary<string, string> fields = SplitLineStr(line);
                 
-                if (fields.Length == 0)
+                if (fields.Count == 0)
                 {
                     continue;
                 }
                 // 終了判定
-                if (fields[0].Trim().Equals("</lane>"))
+                if (line.Equals("</lane>"))
                 {
                     break;
                 }
@@ -228,28 +224,27 @@ namespace ULoggerCS
                 // レーン情報を取得
                 Lane lane = new Lane();
 
-                foreach (string field in fields)
+                foreach (KeyValuePair<string, string> kvp in fields)
                 {
                     // keyとvalueに分割
-                    string[] splitted = field.Split(':');
-                    if (splitted.Length >= 2)
+                    if (kvp.Value != null)
                     {
-                        switch (splitted[0])
+                        switch (kvp.Key)
                         {
                             case "id":
                                 UInt32 id;
-                                if (UInt32.TryParse(splitted[1], out id))
+                                if (UInt32.TryParse(kvp.Value, out id))
                                 {
                                     lane.ID = id;
                                 }
                                 break;
                             case "name":
-                                lane.Name = splitted[1];
+                                lane.Name = kvp.Value;
                                 break;
                             case "color":
                                 try {
                                     // FF001122 のような16進数文字列を整数値に変換
-                                    lane.Color = Convert.ToUInt32(splitted[1], 16);
+                                    lane.Color = Convert.ToUInt32(kvp.Value, 16);
                                 }
                                 catch (Exception e)
                                 {
@@ -265,20 +260,121 @@ namespace ULoggerCS
         }
 
         /**
+         * １行分のデータを フィールド名:値 の辞書型に変換する
+         * @input line: 1行分のテキスト
+         * @input fieldSplit : フィール間の区切り文字
+         * @input tokenSplit : キー＆値の区切り文字
+         */
+        private static Dictionary<string, string> SplitLineStr(string line, char fieldSplit = ',', char tokenSplit = ':')
+        {
+            var fields = new Dictionary<string, string>();
+
+            // key:value, key:"value" を辞書型に変換する
+            // "" に囲まれた文字列中にカンマが入っていても大丈夫なようにする
+            char[] chars = line.ToCharArray();
+
+            bool isKey = true;
+            bool isDQ = false;      // ダブルクオート(")で囲まれた文字を処理中にtrue
+            bool isEscape = false;  // ダブルクオート(")内で \" を "と認識するためのフラグ
+            List<char> cbuf = new List<char>(100);
+            string key = null, value = null;
+
+            foreach (char c in chars)
+            {
+                if (isDQ)
+                {
+                    // "～" で囲まれた部分は fieldSplit や tokenSplit の文字列を無視する
+                    if (c == '\\')
+                    {
+                        isEscape = true;
+                    }
+                    else if (c == '"' && isEscape != true)
+                    {
+                        isDQ = false;
+                    }
+                    else
+                    {
+                        cbuf.Add(c);
+                    }
+                    if (c != '\\')
+                    {
+                        isEscape = false;
+                    }
+                }
+                else
+                {
+                    if (c == '"')
+                    {
+                        isDQ = true;
+                    }
+                    else if (c == fieldSplit)
+                    {
+                        // フィールドの区切り文字を見つけたら辞書型 キー = 値 のセットをに追加する
+                        if (isKey)
+                        {
+                            key = new String(cbuf.ToArray());
+                        }
+                        else
+                        {
+                            value = new String(cbuf.ToArray());
+                        }
+                        if (key != null && key.Length > 0)
+                        {
+                            fields[key] = value;
+                        }
+                        cbuf.Clear();
+                        key = null;
+                        value = null;
+                        isKey = true;
+                    }
+                    else if (c == tokenSplit)
+                    {
+                        // トークンの区切り文字を見つけたら キー読み取りモードから値読み取りのモードに切り替える
+                        key = new String(cbuf.ToArray());
+                        cbuf.Clear();
+                        isKey = false;
+                    }
+                    else
+                    {
+                        cbuf.Add(c);
+                    }
+                }
+            }
+            // フィールドの区切り文字を見つけたら辞書型 キー = 値 のセットをに追加する
+            if (isKey)
+            {
+                key = new String(cbuf.ToArray());
+            }
+            else
+            {
+                value = new String(cbuf.ToArray());
+            }
+            if (key != null && key.Length > 0)
+            {
+                fields[key] = value;
+            }
+
+            return fields;
+        }
+
+        /**
          * １行分のIconImage情報を取得する
          */
-        private IconImages GetIconImagesText(TextFieldParser parser)
+        private MemIconImages GetIconImagesText(StreamReader sr)
         {
-            while (!parser.EndOfData)
-            {
-                string[] fields = parser.ReadFields();
+            MemIconImages _images = new MemIconImages();
 
-                if (fields.Length == 0)
+            while (!sr.EndOfStream)
+            {
+                string line = sr.ReadLine().Trim();
+                Dictionary<string, string> fields = SplitLineStr(line);
+
+                if (fields.Count == 0)
                 {
                     continue;
                 }
                 // 終了判定
-                if (fields[0].Trim().Equals("</images>"))
+                if (line.Equals("</image>"))
                 {
                     break;
                 }
@@ -286,22 +382,21 @@ namespace ULoggerCS
                 // 画像情報を取得
                 MemIconImage image = new MemIconImage();
 
-                foreach (string field in fields)
+                foreach (KeyValuePair<string, string> kvp in fields)
                 {
                     // keyとvalueに分割
-                    string[] splitted = field.Split(':');
-                    if (splitted.Length >= 2)
+                    if (kvp.Value != null)
                     {
-                        switch (splitted[0])
+                        switch (kvp.Key.ToLower())
                         {
                             case "name":
-                                image.Name = splitted[1];
+                                image.Name = kvp.Value;
                                 break;
                             case "image":
                                 try
                                 {
                                     // Base64文字列を出コード
-                                    byte[] byteImage = Convert.FromBase64String(splitted[1]);
+                                    byte[] byteImage = Convert.FromBase64String(kvp.Value);
                                     image.SetByteImage(byteImage);
                                 }
                                 catch (Exception e)
@@ -312,8 +407,9 @@ namespace ULoggerCS
                         }
                     }
                 }
+                _images.Add(image);
             }
-            return null;
+            return _images;
         }
 
         /**
@@ -321,32 +417,34 @@ namespace ULoggerCS
          * <body>～</body> の中の行をすべて取得する
          * 
          */
-        private MemLogAreaManager GetLogDataText(TextFieldParser parser)
+        private MemLogAreaManager GetLogDataText(StreamReader sr)
         {
             MemLogAreaManager manager = new MemLogAreaManager();
 
-            while (!parser.EndOfData)
+            while (!sr.EndOfStream)
             {
-                string[] fields = parser.ReadFields();
+                string line = sr.ReadLine().Trim();
+                Dictionary<string, string> fields = SplitLineStr(line);
 
-                if (fields.Length == 0)
+                if (fields.Count == 0)
                 {
                     continue;
                 }
-                string firstField = fields[0].Trim();
+                
                 // 終了判定
-                switch (firstField)
+                if (line.Equals("</body>"))
                 {
-                    case "</body>":
-                        return manager;
-                    case "area":
-                        MemLogArea area = GetMemAreaText(fields, manager);
-                        manager.AddArea(area);
-                        break;
-                    case "log":
-                        MemLogData log = GetMemLogText(fields);
-                        manager.AddLogData(log);
-                        break;
+                    return manager;
+                }
+                else if (fields.ContainsKey("area"))
+                {
+                    MemLogArea area = GetMemAreaText(fields, manager);
+                    manager.AddArea(area);
+                }
+                else if (fields.ContainsKey("log"))
+                {
+                    MemLogData log = GetMemLogText(fields);
+                    manager.AddLogData(log);
                 }
             }
 
@@ -358,25 +456,24 @@ namespace ULoggerCS
          * @input fields:
          * @output  取得したエリアデータ
          */
-        private static MemLogArea GetMemAreaText(string[] fields, MemLogAreaManager manager)
+        private static MemLogArea GetMemAreaText(Dictionary<string,string> fields, MemLogAreaManager manager)
         {
             MemLogArea area = new MemLogArea();
 
-            foreach (string field in fields)
+            foreach (KeyValuePair<string, string> kvp in fields)
             {
-                string[] splitted = field.Split(':');
-                if (splitted.Length == 2)
+                if (kvp.Value != null)
                 {
-                    switch (splitted[0].ToLower())
+                    switch (kvp.Key.ToLower())
                     {
                         case "name":
-                            area.Name = splitted[1];
+                            area.Name = kvp.Value;
                             break;
                         case "parent":
-                            area.ParentArea = manager.searchArea(splitted[1]);
+                            area.ParentArea = manager.searchArea(kvp.Value);
                             break;
                         case "color":
-                            area.Color = Convert.ToUInt32(splitted[1], 16);
+                            area.Color = Convert.ToUInt32(kvp.Value, 16);
                             break;
                         case "image":       // todo
                             break;
@@ -394,19 +491,18 @@ namespace ULoggerCS
          *  Sample
          *  log,type: Single,id: 1,lane: 1,time: 0.0026799596,text: "test1"
          */
-        private static MemLogData GetMemLogText(string[] fields)
+        private static MemLogData GetMemLogText(Dictionary<string,string> fields)
         {
             MemLogData log = new MemLogData();
 
-            foreach (string field in fields)
+            foreach (KeyValuePair<string,string> kvp in fields)
             {
-                string[] splitted = field.Split(':');
-                if (splitted.Length == 2)
+                if (kvp.Value != null)
                 {
-                    switch (splitted[0].ToLower())
+                    switch (kvp.Key.ToLower())
                     {
                         case "type":
-                            switch (splitted[1].ToLower()) {
+                            switch (kvp.Value.ToLower()) {
                                 case "single":               // 単体ログ
                                     log.Type = MemLogType.Point;
                                     break;
@@ -422,22 +518,22 @@ namespace ULoggerCS
                             }
                             break;
                         case "id":
-                            log.ID = UInt32.Parse(splitted[1]);
+                            log.ID = UInt32.Parse(kvp.Value);
                             break;
                         case "lane":
-                            log.LaneId = Byte.Parse(splitted[1]);
+                            log.LaneId = Byte.Parse(kvp.Value);
                             break;
                         case "time":
-                            log.Time1 = Double.Parse(splitted[1]);
+                            log.Time1 = Double.Parse(kvp.Value);
                             break;
                         case "text":
-                            log.Text = splitted[1];
+                            log.Text = kvp.Value;
                             break;
                         case "color":
-                            log.Color = Convert.ToUInt32(splitted[1], 16);
+                            log.Color = Convert.ToUInt32(kvp.Value, 16);
                             break;
                         case "detail_type":
-                            switch(splitted[1].ToLower())
+                            switch(kvp.Value.ToLower())
                             {
                                 case "text":
                                     log.DetailType = DetailDataType.Text;
@@ -458,7 +554,7 @@ namespace ULoggerCS
                             {
                                 Console.WriteLine("");
                             }
-                            log.Detail = splitted[1];
+                            log.Detail = kvp.Value;
                             break;
                     }
                 }

@@ -57,7 +57,7 @@ namespace ULoggerCS
                 if (imagePath != null && File.Exists(imagePath))
                 {
                     byte[] image = File.ReadAllBytes(imagePath);
-                    sb.AppendFormat(@"image:""{0}""", Convert.ToBase64String(image));
+                    sb.AppendFormat(@",image:""{0}""", Convert.ToBase64String(image));
                     return sb.ToString();
                 }
             }
