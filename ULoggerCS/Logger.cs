@@ -14,12 +14,21 @@ namespace ULoggerCS
 
     class Logs
     {
-        public const int LOG_BLOCK_SIZE = 100;
+        public const int LOG_BLOCK_SIZE = 10;
 
         public Log[] logs = new Log[LOG_BLOCK_SIZE];
 
         // Constructor
         public Logs()
+        {
+            for (int i = 0; i < LOG_BLOCK_SIZE; i++)
+            {
+                logs[i] = null;
+            }
+        }
+
+        // Clear
+        public void Clear()
         {
             for (int i = 0; i < LOG_BLOCK_SIZE; i++)
             {
@@ -48,7 +57,7 @@ namespace ULoggerCS
         private int currentBufferNo;    // 現在のバッファ番号
         private int currentBlockNo;     // 現在のブロック番号
         private int currentPos;         // 現在のブロック内での位置
-        private int allocatedBlockNum;  // 確保済みのブロック数
+        private int[] allocatedBlockNum;  // 確保済みのブロック数
         private LogFileType fileType;   // ログファイルの種類
         private string encodingType;    // 文字コードの種類
 
@@ -96,7 +105,7 @@ namespace ULoggerCS
             currentBufferNo = 0;
             currentBlockNo = 0;
             currentPos = 0;
-            allocatedBlockNum = 0;
+            allocatedBlockNum = new int[LOG_BUF_SIZE];
             fileType = LogFileType.Text;
             encodingType = "UTF8";          // デフォルトはUTF8
 
@@ -178,19 +187,19 @@ namespace ULoggerCS
                 // 現在のブロックに空きがないなら次のブロックへ
                 if (currentPos >= Logs.LOG_BLOCK_SIZE)
                 {
-                    if (currentBlockNo < LOG_BLOCK_MAX)
+                    if (currentBlockNo < LOG_BLOCK_MAX - 1)
                     {
                         currentBlockNo++;
                         currentPos = 0;
+                        if (allocatedBlockNum[currentBufferNo] < LOG_BLOCK_MAX)
+                        {
+                            AllocateBlock();
+                        }
                     }
                     else
                     {
-                        // これ以上のブロックは増やせない
-                        return false;
-                    }
-                    if (allocatedBlockNum < LOG_BLOCK_MAX)
-                    {
-                        AllocateBlock();
+                        // これ以上のブロックは増やせないのでファイルに書き込み
+                        WriteBody();
                     }
                 }
 
@@ -312,6 +321,14 @@ namespace ULoggerCS
             // バッファを切り替え
             writeBufferNo = currentBufferNo;
             currentBufferNo = (currentBufferNo + 1) & 0x1;
+            currentPos = 0;
+            currentBlockNo = 0;
+
+            // 切り替え先のバッファにブロックを確保する
+            if (allocatedBlockNum[currentBufferNo] == 0)
+            {
+                AllocateBlock();
+            }
 
             // Todo バックグラウンドで処理する
             if (fileType == LogFileType.Text)
@@ -321,6 +338,17 @@ namespace ULoggerCS
             else
             {
                 WriteBodyBin();
+            }
+
+            // 書き込み完了したのでバッファをクリアする
+            // ただし、メモリに確保した Logs は残しておく。
+            for (int i = 0; i < LOG_BLOCK_MAX; i++)
+            {
+                Logs _block = blocks[writeBufferNo, i];
+                if (_block != null)
+                {
+                    _block.Clear();
+                }
             }
         }
 
@@ -447,12 +475,12 @@ namespace ULoggerCS
         public bool AllocateBlock()
         {
             // 現在のバッファーに空きがあるかを確認
-            if (allocatedBlockNum < LOG_BLOCK_MAX)
+            if (allocatedBlockNum[currentBufferNo] < LOG_BLOCK_MAX)
             {
                 // メモリ確保
-                blocks[currentBufferNo, allocatedBlockNum] = new Logs();
+                blocks[currentBufferNo, allocatedBlockNum[currentBufferNo]] = new Logs();
 
-                allocatedBlockNum++;
+                allocatedBlockNum[currentBufferNo]++;
 
                 return true;
             }
