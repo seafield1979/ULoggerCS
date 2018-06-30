@@ -75,6 +75,18 @@ namespace ULoggerCS
             }
             return null;
         }
+
+        override public string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendFormat(@"name:""{0}""", name);
+            if (image != null)
+            {
+                sb.AppendFormat(@"imageSize:""{0}""", image.Size);
+            }
+
+            return sb.ToString();
+        }
     }
 
     class MemIconImages
@@ -110,6 +122,23 @@ namespace ULoggerCS
                 return images[name];
             }
             return null;
+        }
+
+        /**
+         * 文字列に変換 for Debug
+         */
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("<images>");
+            foreach( MemIconImage image in images.Values)
+            {
+                sb.AppendFormat("\t{0}\r\n", image.ToString());
+            }
+            sb.AppendLine("</images>");
+
+            return sb.ToString();
         }
     }
 }

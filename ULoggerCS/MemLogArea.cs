@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 /**
  * ULogViewでメモリ情報に展開されたログデータ
@@ -113,6 +114,23 @@ namespace ULoggerCS
                 logs = new List<MemLogData>();
             }
             logs.Add(logData);
+
+            // 開始、終了の時間を更新
+            // Start
+            if (timeStart > logData.Time1)
+            {
+                timeStart = logData.Time1;
+            }
+
+            // End
+            if (timeEnd < logData.Time2)
+            {
+                timeEnd = logData.Time2;
+            }
+            else if (timeEnd < logData.Time1)
+            {
+                timeEnd = logData.Time1;
+            }
         }
 
         /**
@@ -135,11 +153,10 @@ namespace ULoggerCS
                 sb.Append(String.Format(" imageName:{0}", imageName));
             }
 
-            if (parentArea != null)
-            {
-                //sb.Append(String.Format(" paretArea:{0}", parentArea));
-            }
-
+            //if (parentArea != null)
+            //{
+            //    sb.Append(String.Format(" paretArea:{0}", parentArea));
+            //}
             sb.AppendLine("");
 
             // ログデータ
@@ -161,6 +178,40 @@ namespace ULoggerCS
             }
 
             return sb.ToString();
+        }
+
+        public void WriteToFile(StreamWriter sw)
+        {
+            sw.Write("area name:{0},color:{1:X8} timeStart:{2}", name, color, timeStart);
+            if (timeEnd != 0)
+            {
+                sw.Write(",timeEnd:{0}", timeEnd);
+            }
+            if (imageName != null)
+            {
+                sw.Write(",imageName:{0}", imageName);
+            }
+
+            sw.WriteLine();
+
+            // ログデータ
+            if (logs != null)
+            {
+                foreach (var log in logs)
+                {
+                    sw.WriteLine(log.ToString());
+                }
+            }
+
+            // 子エリア
+            // 再帰的に子エリアをたどっていく
+            if (childArea != null)
+            {
+                foreach (MemLogArea area in childArea)
+                {
+                    area.WriteToFile(sw);
+                }
+            }
         }
 
         public void Print()
@@ -272,10 +323,16 @@ namespace ULoggerCS
             return rootArea;
         }
 
-
+        #region Debug
         public void Print()
         {
             rootArea.Print();
         }
+
+        public void WriteToFile(StreamWriter sw)
+        {
+            rootArea.WriteToFile(sw);
+        }
+        #endregion
     }
 }

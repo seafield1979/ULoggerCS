@@ -61,6 +61,7 @@ namespace ULoggerCS
         private LogFileType fileType;   // ログファイルの種類
         private string encodingType;    // 文字コードの種類
 
+        private bool isFirstBody = true;       // 最初に本体部分を書き込んだら false になる
         
         public LogFileType FileType
         {
@@ -316,8 +317,11 @@ namespace ULoggerCS
         /**
          * 本体部分をファイルに書き込む
          */
-        public void WriteBody()
+        public void WriteBody(bool isLast = false)
         {
+#if DEBUG
+            DebugPrint();
+#endif
             // バッファを切り替え
             writeBufferNo = currentBufferNo;
             currentBufferNo = (currentBufferNo + 1) & 0x1;
@@ -333,7 +337,7 @@ namespace ULoggerCS
             // Todo バックグラウンドで処理する
             if (fileType == LogFileType.Text)
             {
-                WriteBodyText();
+                WriteBodyText(isLast);
             }
             else
             {
@@ -355,11 +359,15 @@ namespace ULoggerCS
         /**
          * 本体部分をテキスト形式で書き込む
          */
-        public void WriteBodyText()
+        public void WriteBodyText(bool isLast)
         {
             using (StreamWriter sw = new StreamWriter(logFilePath, true, Encoding.UTF8))
             {
-                sw.WriteLine("<body>");
+                if (isFirstBody)
+                {
+                    sw.WriteLine("<body>");
+                    isFirstBody = false;
+                }
 
                 for (int i = 0; i < LOG_BLOCK_MAX; i++)
                 {
@@ -376,7 +384,10 @@ namespace ULoggerCS
                         }
                     }
                 }
-                sw.WriteLine("</body>");
+                if (isLast)
+                {
+                    sw.WriteLine("</body>");
+                }
             }
         }
 
@@ -444,20 +455,17 @@ namespace ULoggerCS
                 return;
             }
 
-            for (int i = 0; i < LOG_BUF_SIZE; i++)
+            for (int j = 0; j < LOG_BLOCK_MAX; j++)
             {
-                for (int j = 0; j < LOG_BLOCK_MAX; j++)
-                {
-                    Logs block = blocks[i,j];
+                Logs block = blocks[currentBufferNo,j];
 
-                    if (block != null)
+                if (block != null)
+                {
+                    for (int k = 0; k < Logs.LOG_BLOCK_SIZE; k++)
                     {
-                        for (int k = 0; k < Logs.LOG_BLOCK_SIZE; k++)
+                        if (block.logs[k] != null)
                         {
-                            if (block.logs[k] != null)
-                            {
-                                Console.WriteLine("[{0}][{1}][{2}] {3}", i, j, k, block.logs[k].ToString());
-                            }
+                            Console.WriteLine("[{0}][{1}][{2}] {3}", currentBufferNo, j, k, block.logs[k].ToString());
                         }
                     }
                 }

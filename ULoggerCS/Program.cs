@@ -17,8 +17,8 @@ namespace ULoggerCS
 
 #if DEBUG
             myArgs.FilePath = @"C:\work\Github\ULoggerCS\Test\InputData\sample04";
-            myArgs.FileType = LogFileType.Binary;
-            myArgs.IsReadMode = false;
+            myArgs.FileType = LogFileType.Text;
+            myArgs.IsReadMode = true;
             if (myArgs.FileType == LogFileType.Text)
             {
                 myArgs.FilePath += ".ulog";
@@ -116,7 +116,7 @@ namespace ULoggerCS
             logger.DebugPrint();
 
             // バッファに残ったログを書き込み
-            logger.WriteBody();
+            logger.WriteBody(true);
         }
 
         /**
@@ -129,7 +129,11 @@ namespace ULoggerCS
             // Loggerを作成
             LogReader reader = new LogReader();
 
+            // ログファイルをメモリに読み込む
             reader.ReadLogFile(inputFilePath, fileType);
+
+            // ファイルに書き出す
+            reader.WriteToFile(@"C:\work\Github\ULoggerCS\Test\OutputData\memdata.txt");
 
             Console.WriteLine("TestRead1 finished!!");
         }

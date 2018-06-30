@@ -83,6 +83,8 @@ namespace ULoggerCS
                 txtParser.TextFieldType = FieldType.Delimited;
                 // デリミタはカンマ
                 txtParser.SetDelimiters(",");
+                // フィールドが引用符で囲まれているか
+                // txtParser.HasFieldsEnclosedInQuotes = true;
 
                 // ヘッダ部分を読み込む <head>～</head>
                 while (!txtParser.EndOfData)
@@ -450,9 +452,12 @@ namespace ULoggerCS
                                     log.DetailType = DetailDataType.JSON;
                                     break;
                             }
-                            log.DetailType = DetailDataType.Text;
                             break;
                         case "detail":
+                            if (log.DetailType == DetailDataType.Array)
+                            {
+                                Console.WriteLine("");
+                            }
                             log.Detail = splitted[1];
                             break;
                     }
@@ -664,7 +669,7 @@ namespace ULoggerCS
                 _lanes.Add(lane);
             }
 
-            return lanes;
+            return _lanes;
         }
 
         /**
@@ -782,6 +787,10 @@ namespace ULoggerCS
             //ログデータ（詳細）の種類
             log.DetailType = (DetailDataType)fs.GetByte();
 
+            if (log.DetailType == DetailDataType.Array)
+            {
+                Console.WriteLine("hoge");
+            }
             //ログデータ(詳細)のサイズ
             //ログデータ(詳細)
             if (log.DetailType != DetailDataType.None)
@@ -817,5 +826,37 @@ namespace ULoggerCS
 
         #endregion
 
+
+        #region Debug
+
+        /**
+         * LogReaderに読み込んだ情報をファイルに保存する
+         * 
+         * @input filePath : 書き込み先のファイルパス
+         */
+        public void WriteToFile(string filePath)
+        {
+            using (StreamWriter sw = new StreamWriter(filePath, false, Encoding.UTF8))
+            {
+                if (logIDs != null)
+                {
+                    sw.Write(logIDs.ToString());
+                }
+                if (lanes != null)
+                {
+                    sw.Write(lanes.ToString());
+                }
+                if (images != null)
+                {
+                    sw.Write(images.ToString());
+                }
+                
+                if (areaManager != null)
+                {
+                    areaManager.WriteToFile(sw);
+                }
+            }
+        }
+        #endregion
     }
 }

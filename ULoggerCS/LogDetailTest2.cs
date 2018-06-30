@@ -52,16 +52,17 @@ namespace ULoggerCS
         override public string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            
+
+            sb.Append("[");
             for (int i = 0; i < ARRAY1_SIZE; i++)
             {
                 if (i > 0)
                 {
                     sb.Append(",");
                 }
-                string str = String.Format("[{0}]:{1}", i, array1[i]);
-                sb.Append(str);
+                sb.Append(array1[i]);
             }
+            sb.Append("]");
             return sb.ToString();
         }
 

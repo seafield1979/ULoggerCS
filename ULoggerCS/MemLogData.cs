@@ -194,7 +194,10 @@ namespace ULoggerCS
             }
             sb.AppendFormat(" text:{0}", text);
             sb.AppendFormat(" detailType:{0}", detailType);
-            sb.AppendFormat(" detailText:{0}", detail);
+            if (detailType != DetailDataType.None)
+            {
+                sb.AppendFormat(" detailText:{0}", detail);
+            }
 
             return sb.ToString();
         }
