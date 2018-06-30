@@ -60,9 +60,9 @@ namespace ULoggerCS
         }
 
         //表示レーン
-        private byte laneId;
+        private UInt32 laneId;
 
-        public byte LaneId
+        public UInt32 LaneId
         {
             get { return laneId; }
             set { laneId = value; }

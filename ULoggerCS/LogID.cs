@@ -105,7 +105,7 @@ namespace ULoggerCS
             // アイコン画像名
             if (imageName == null)
             {
-                data.AddRange(new byte[] { 0, 0 });
+                data.AddRange(BitConverter.GetBytes((int)0));
             }
             else
             {

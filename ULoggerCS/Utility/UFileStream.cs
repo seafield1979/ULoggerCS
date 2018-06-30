@@ -18,8 +18,15 @@ namespace ULoggerCS.Utility
         //
         // Properties
         //
-        private int offset;
         FileStream fs;
+        private Encoding encoding;
+
+        public Encoding EncodingType
+        {
+            get { return encoding; }
+            set { encoding = value; }
+        }
+
 
         // Byteを読み込む先のバッファ。一番大きい Int64, Doubleが取得できる容量
         private byte[] buf = new byte[8]; 
@@ -30,7 +37,7 @@ namespace ULoggerCS.Utility
         // using (var fs = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
         public UFileStream(string filePath, FileMode mode, FileAccess access)
         {
-            offset = 0;
+            encoding = Encoding.UTF8;
             fs = new FileStream(filePath, mode, access);
         }
 
@@ -122,87 +129,105 @@ namespace ULoggerCS.Utility
             fs.Write(bytes, 0, sizeof(double));
         }
 
+        public void WriteBytes(byte[] bytes)
+        {
+            if (bytes != null && bytes.Length > 0)
+            {
+                fs.Write(bytes, 0, bytes.Length);
+            }
+        }
+
+        public void WriteString(string value, Encoding encoding)
+        {
+            byte[] bytes = encoding.GetBytes(value);
+            fs.Write(bytes, 0, bytes.Length);
+        }
+
+        public void WriteSizeString(string value, Encoding encoding)
+        {
+            byte[] bytes = encoding.GetBytes(value);
+
+            WriteUInt32((UInt32)bytes.Length);
+
+            fs.Write(bytes, 0, bytes.Length);
+        }
+
         #endregion
 
         #region Read
 
         public bool GetBool()
         {
-            fs.Read(buf, offset, 1);
-            offset++;
+            fs.Read(buf, 0, 1);
             return buf[0] == 0 ? false : true;
         }
         public byte GetByte()
         {
-            fs.Read(buf, offset, 1);
-            offset++;
+            fs.Read(buf, 0, 1);
             return buf[0];
         }
 
         public char GetChar()
         {
-            fs.Read(buf, offset, 1);
-            offset++;
+            fs.Read(buf, 0, 1);
             return (char)buf[0];
         }
 
         public Int16 GetInt16()
         {
-            fs.Read(buf, offset, sizeof(Int16));
-            offset += sizeof(Int16);
+            fs.Read(buf, 0, sizeof(Int16));
             return BitConverter.ToInt16(buf, 0);
         }
 
         public UInt16 GetUInt16()
         {
-            fs.Read(buf, offset, sizeof(UInt16));
-            offset += sizeof(UInt16);
+            fs.Read(buf, 0, sizeof(UInt16));
             return BitConverter.ToUInt16(buf, 0);
         }
 
         public Int32 GetInt32()
         {
-            fs.Read(buf, offset, sizeof(Int32));
-            offset += sizeof(Int32);
+            fs.Read(buf, 0, sizeof(Int32));
             return BitConverter.ToInt32(buf, 0);
         }
 
         public UInt32 GetUInt32()
         {
-            fs.Read(buf, offset, sizeof(UInt32));
-            offset += sizeof(UInt32);
+            fs.Read(buf, 0, sizeof(UInt32));
             return BitConverter.ToUInt32(buf, 0);
         }
 
         public Int64 GetInt64()
         {
-            fs.Read(buf, offset, sizeof(Int64));
-            offset += sizeof(Int64);
+            fs.Read(buf, 0, sizeof(Int64));
             return BitConverter.ToInt64(buf, 0);
         }
 
         public UInt64 GetUInt64()
         {
-            fs.Read(buf, offset, sizeof(UInt64));
-            offset += sizeof(UInt64);
+            fs.Read(buf, 0, sizeof(UInt64));
             return BitConverter.ToUInt64(buf, 0);
         }
 
         public float GetSingle()
         {
-            fs.Read(buf, offset, sizeof(float));
-            offset += sizeof(float);
+            fs.Read(buf, 0, sizeof(float));
             return BitConverter.ToSingle(buf, 0);
         }
 
         public double GetDouble()
         {
-            fs.Read(buf, offset, sizeof(double));
-            offset += sizeof(double);
+            fs.Read(buf, 0, sizeof(double));
             return BitConverter.ToDouble(buf, 0);
         }
 
-        #endregion
+        public byte[] GetBytes(int size)
+        {
+            byte[] bytes = new byte[size];
+
+            fs.Read(bytes, 0, size);
+            return bytes;
+        }
 
         /**
          * 文字列のサイズと文字列本体を読み込む
@@ -213,17 +238,21 @@ namespace ULoggerCS.Utility
             Int32 size = GetInt32();
 
             // string
-            byte[] _buf = new byte[size];
-            fs.Read(_buf, offset, size);
-            return BitConverter.ToString(_buf);
+            byte[] buf = new byte[size];
+            fs.Read(buf, 0, size);
+
+            return encoding.GetString(buf);
         }
 
         public string GetString(int size)
         {
             // string
             byte[] _buf = new byte[size];
-            fs.Read(_buf, offset, size);
-            return BitConverter.ToString(_buf);
+            fs.Read(_buf, 0, size);
+            return encoding.GetString(buf);
         }
+
+        #endregion
+
     }
 }

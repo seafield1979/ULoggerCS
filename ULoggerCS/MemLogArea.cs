@@ -140,6 +140,8 @@ namespace ULoggerCS
                 //sb.Append(String.Format(" paretArea:{0}", parentArea));
             }
 
+            sb.AppendLine("");
+
             // ログデータ
             if (logs != null)
             {
@@ -204,9 +206,9 @@ namespace ULoggerCS
          * @input logArea: 追加するログエリア
          * @input parentName: 追加先の親エリア名
          */
-        public void AddArea(MemLogArea logArea, MemLogArea parentArea)
+        public void AddArea(MemLogArea logArea)
         {
-            if (parentArea == null)
+            if (logArea.ParentArea == null)
             {
                 // 最後に追加したエリアと同じ階層（同じ親の下）に追加する
                 if (lastAddArea != null)
@@ -228,7 +230,7 @@ namespace ULoggerCS
             else
             {
                 // 指定した親の下に追加
-                parentArea.AddChildArea(logArea);
+                logArea.ParentArea.AddChildArea(logArea);
             }
 
             lastAddArea = logArea;

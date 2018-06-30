@@ -117,6 +117,8 @@ namespace ULoggerCS
 
             // ログID情報を登録
             logIDs = new LogIDs();
+
+            images = new IconImages();
         }
 
         ~Logger()
@@ -155,6 +157,12 @@ namespace ULoggerCS
         public void AddLogID(UInt32 id, string name, UInt32 color, UInt32 frameColor = 0xFF000000)
         {
             logIDs.Add(id, name, color, frameColor);
+        }
+
+        // アイコン画像を追加
+        public void AddImage(string name, string imagePath)
+        {
+            images.Add(name, imagePath);
         }
 
         /**
@@ -267,6 +275,7 @@ namespace ULoggerCS
                 // 書き込み処理
                 sw.Write(lanes.ToString());
                 sw.Write(logIDs.ToString());
+                sw.Write(images.ToString());
 
                 sw.WriteLine("</head>");
             }
@@ -278,21 +287,20 @@ namespace ULoggerCS
         public void WriteHeaderBin()
         {
             // 新規
-            using (FileStream fs = new FileStream(logFilePath, FileMode.Create, FileAccess.Write))
+            using (UFileStream fs = new UFileStream(logFilePath, FileMode.Create, FileAccess.Write))
             {
                 // エンコードの長さ
-                byte[] encodingData = Encoding.UTF8.GetBytes(encodingType);
-                fs.Write(BitConverter.GetBytes(encodingType.Length), 0, 4);
                 // エンコード
-                fs.Write(encodingData, 0, encodingData.Length);
-
+                fs.WriteSizeString(encodingType, Encoding.UTF8);
+                
                 // ID情報
-                byte[] data = logIDs.ToBinary();
-                fs.Write(data, 0, data.Length);
+                fs.WriteBytes(logIDs.ToBinary());
 
                 // レーン情報
-                data = lanes.ToBinary();
-                fs.Write(data, 0, data.Length);
+                fs.WriteBytes(lanes.ToBinary());
+
+                // Icon image
+                fs.WriteBytes(images.ToBinary());
             }
         }
 
@@ -350,8 +358,11 @@ namespace ULoggerCS
         public void WriteBodyBin()
         {
             // 追加
-            using (FileStream fs = new FileStream(logFilePath, FileMode.Append, FileAccess.Write))
+            using (UFileStream fs = new UFileStream(logFilePath, FileMode.Append, FileAccess.Write))
             {
+                // ログ件数
+                fs.WriteInt32(GetLogNum());
+                
                 for (int i = 0; i < LOG_BLOCK_MAX; i++)
                 {
                     Logs block = blocks[writeBufferNo, i];
@@ -362,13 +373,39 @@ namespace ULoggerCS
                         {
                             if (block.logs[j] != null)
                             {
-                                byte[] data = block.logs[j].ToBinary();
-                                fs.Write(data, 0, data.Length);
+                                fs.WriteBytes(block.logs[j].ToBinary());
                             }
                         }
                     }
                 }
             }
+        }
+
+        /**
+         * バッファに積まれたログの件数を取得する
+         * @output : バッファに積まれたログ件数
+         */
+        public int GetLogNum()
+        {
+            int num = 0;
+
+            for (int i = 0; i < LOG_BLOCK_MAX; i++)
+            {
+                Logs block = blocks[writeBufferNo, i];
+
+                if (block != null)
+                {
+                    for (int j = 0; j < Logs.LOG_BLOCK_SIZE; j++)
+                    {
+                        if (block.logs[j] != null)
+                        {
+                            num++;
+                        }
+                    }
+                }
+            }
+
+            return num;
         }
         
         // for Debug

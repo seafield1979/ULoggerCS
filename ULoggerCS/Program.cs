@@ -15,6 +15,12 @@ namespace ULoggerCS
             MyArgs myArgs = MyArgs.GetMyArgs(args);
             Console.WriteLine(myArgs);
 
+#if DEBUG
+            myArgs.FilePath = @"C:\work\Github\ULoggerCS\Test\InputData\sample03.ulgb";
+            myArgs.FileType = LogFileType.Binary;
+            myArgs.IsReadMode = true;
+#endif
+
             if (myArgs.IsReadMode)
             {
                 TestRead1(myArgs.FilePath, myArgs.FileType);
@@ -46,19 +52,22 @@ namespace ULoggerCS
             // ヘッダー情報を追加
             logger.AddLogID(1, "id1", UColor.Black);
             logger.AddLogID(2, "id2", UColor.Black);
-            logger.AddLogID(3, "id3", UColor.Black);
-            logger.AddLogID(4, "id4", UColor.Black);
+            //logger.AddLogID(3, "id3", UColor.Black);
+            //logger.AddLogID(4, "id4", UColor.Black);
 
             logger.AddLane(1, "lane1", UColor.Black);
             logger.AddLane(2, "lane2", UColor.Black);
-            logger.AddLane(3, "lane3", UColor.Black);
-            logger.AddLane(4, "lane4", UColor.Black);
+            //logger.AddLane(3, "lane3", UColor.Black);
+            //logger.AddLane(4, "lane4", UColor.Black);
+
+            logger.AddImage("icon1", @"C:\work\Github\ULoggerCS\Test\Image\icon1.bmp");
+            logger.AddImage("icon2", @"C:\work\Github\ULoggerCS\Test\Image\icon2.png");
 
             // エリアを追加
             logger.AddArea("area1", null);
 
             // ログを追加
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 2; i++)
             {
                 logger.AddLogData(1, LogDataType.Single, 1, "test1");
             }
@@ -69,7 +78,7 @@ namespace ULoggerCS
             logger.AddArea("area1-2", "area1");
 
             // 詳細ありのログを追加
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 2; i++)
             {
                 LogDetailTest1 detail = new LogDetailTest1();
                 detail.DetailText = "hoge123";
@@ -90,6 +99,7 @@ namespace ULoggerCS
             logger.DebugPrint();
 
             // ファイルに書き込み
+            // ヘッダ書き込みはプログラム開始時のみ、ログ本体書き込みはバッファがいっぱいになるたびに何度も行われる。
             logger.WriteHeader();
             logger.WriteBody();
         }

@@ -60,6 +60,9 @@ namespace ULoggerCS
             return String.Format("area,name:\"{0}\",parent:\"{1}\",color:{2:X8}", name, parentName, color);
         }
 
+        /**
+         * バイナリファイルに保存する形式のbyte配列を返す
+         */
         override public byte[] ToBinary()
         {
             List<byte> data = new List<byte>(1000);
@@ -85,7 +88,6 @@ namespace ULoggerCS
             data.AddRange(BitConverter.GetBytes(color));
 
             return data.ToArray();
-            return null;
         }
     }
 }

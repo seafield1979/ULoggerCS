@@ -23,7 +23,7 @@ namespace ULoggerCS
 
         public Lanes lanes = null;
         public LogIDs logIDs = null;
-        public IconImages images = null;
+        public MemIconImages images = null;
         public MemLogAreaManager areaManager = new MemLogAreaManager();
         public Encoding encoding;
 
@@ -267,6 +267,50 @@ namespace ULoggerCS
          */
         private IconImages GetIconImagesText(TextFieldParser parser)
         {
+            while (!parser.EndOfData)
+            {
+                string[] fields = parser.ReadFields();
+
+                if (fields.Length == 0)
+                {
+                    continue;
+                }
+                // 終了判定
+                if (fields[0].Trim().Equals("</images>"))
+                {
+                    break;
+                }
+
+                // 画像情報を取得
+                MemIconImage image = new MemIconImage();
+
+                foreach (string field in fields)
+                {
+                    // keyとvalueに分割
+                    string[] splitted = field.Split(':');
+                    if (splitted.Length >= 2)
+                    {
+                        switch (splitted[0])
+                        {
+                            case "name":
+                                image.Name = splitted[1];
+                                break;
+                            case "image":
+                                try
+                                {
+                                    // Base64文字列を出コード
+                                    byte[] byteImage = Convert.FromBase64String(splitted[1]);
+                                    image.SetByteImage(byteImage);
+                                }
+                                catch (Exception e)
+                                {
+                                    Console.WriteLine("base64のデコードに失敗しました。");
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
             return null;
         }
 
@@ -295,7 +339,7 @@ namespace ULoggerCS
                         return manager;
                     case "area":
                         MemLogArea area = GetMemAreaText(fields, manager);
-                        manager.AddArea(area, area.ParentArea);
+                        manager.AddArea(area);
                         break;
                     case "log":
                         MemLogData log = GetMemLogText(fields);
@@ -480,7 +524,7 @@ namespace ULoggerCS
         {
             Encoding encoding = Encoding.UTF8;      // デフォルトのエンコード
 
-            switch (encStr)
+            switch (encStr.ToLower())
             {
                 case "ascii":
                     encoding = Encoding.ASCII;
@@ -543,30 +587,29 @@ namespace ULoggerCS
          */ 
         private void ReadLogHeadBin(UFileStream fs)
         {
-            byte[] buffer = new byte[100];
-            int offset = 0;
-            
             // 文字コードを取得
             string encStr = fs.GetSizeString();
             this.encoding = GetEncodingFromStr(encStr);
+            fs.EncodingType = encoding;
             
             // ログID情報
-            ReadLogIDsBin(fs);
+            logIDs = ReadLogIDsBin(fs);
 
             // レーン情報
-            ReadLogLanesBin(fs);
+            lanes = ReadLogLanesBin(fs);
 
             // アイコン画像
-            ReadLogImagesBin(fs);
+            images = ReadLogImagesBin(fs);
         }
 
         /**
          * バイナリログのログID情報を読み込む
          * 
          */
-        private void ReadLogIDsBin(UFileStream fs)
+        private LogIDs ReadLogIDsBin(UFileStream fs)
         {
-            byte[] buffer = new byte[100];
+            LogIDs _logIds = new LogIDs();
+
             // 件数取得
             int size = fs.GetInt32();
 
@@ -587,18 +630,20 @@ namespace ULoggerCS
                 // アイコン画像名
                 logId.ImageName = fs.GetSizeString();
 
-                logIDs.Add(logId);
+                _logIds.Add(logId);
             }
+
+            return _logIds;
         }
 
         /**
          * バイナリログのレーン情報を読み込む
-         * 
+         * @input fs: 読み込み元のファイル
          */
-        private void ReadLogLanesBin(UFileStream fs)
+        private Lanes ReadLogLanesBin(UFileStream fs)
         {
-            // 件数取得
-            byte[] buffer = new byte[100];
+            Lanes _lanes = new Lanes();
+
             // 件数取得
             int size = fs.GetInt32();
 
@@ -616,16 +661,42 @@ namespace ULoggerCS
                 // 色
                 lane.Color = fs.GetUInt32();
 
-                lanes.Add(lane);
+                _lanes.Add(lane);
             }
+
+            return lanes;
         }
 
         /**
          * バイナリログの画像ID情報を読み込む
          */
-        private void ReadLogImagesBin(UFileStream fs)
+        private MemIconImages ReadLogImagesBin(UFileStream fs)
         {
-            
+            MemIconImages _images = new MemIconImages();
+
+            // 件数取得
+            int size = fs.GetInt32();
+
+            for (int i = 0; i < size; i++)
+            {
+                // １件分のログを取得
+                MemIconImage image = new MemIconImage();
+
+                // 名前
+                image.Name = fs.GetSizeString();
+
+                // 画像
+                int imageSize = fs.GetInt32();
+                if (imageSize > 0)
+                {
+                    byte[] byteImage = fs.GetBytes(imageSize);
+                    image.SetByteImage(byteImage);
+                }
+
+                _images.Add(image);
+            }
+
+            return _images;
         }
 
         /**
@@ -635,9 +706,6 @@ namespace ULoggerCS
         private void ReadLogBodyBin(UFileStream fs)
         {
             // エリア、ログ
-
-            // 件数取得
-            byte[] buffer = new byte[100];
 
             // 件数取得
             int logNum = fs.GetInt32();
@@ -663,8 +731,6 @@ namespace ULoggerCS
          */
         private void ReadLogDataBin(UFileStream fs)
         {
-            byte[] buf = new byte[100];
-
             MemLogData log = new MemLogData();
 
             // ログID
@@ -692,7 +758,7 @@ namespace ULoggerCS
             }
 
             //表示レーンID
-            log.LaneId = fs.GetByte();
+            log.LaneId = fs.GetUInt32();
 
             //タイトルの長さ
             //タイトル
@@ -718,7 +784,13 @@ namespace ULoggerCS
 
             //ログデータ(詳細)のサイズ
             //ログデータ(詳細)
-            log.Detail = fs.GetSizeString();
+            if (log.DetailType != DetailDataType.None)
+            {
+                log.Detail = fs.GetSizeString();
+            }
+
+            // ログを追加する
+            areaManager.AddLogData(log);
         }
 
         /**
@@ -726,7 +798,21 @@ namespace ULoggerCS
          */
         private void ReadLogAreaBin(UFileStream fs)
         {
+            MemLogArea area = new MemLogArea();
 
+            // エリア名の長さ
+            // エリア名
+            area.Name = fs.GetSizeString();
+
+            // 親のエリア名の長さ
+            // 親のエリア名
+            area.ParentArea = areaManager.searchArea(fs.GetSizeString());
+
+            // 色
+            area.Color = fs.GetUInt32();
+
+            // エリアを追加
+            areaManager.AddArea(area);
         }
 
         #endregion
