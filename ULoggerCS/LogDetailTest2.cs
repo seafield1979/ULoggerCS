@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace ULoggerCS
 {
+    /**
+     * LogDetailを継承したクラスのサンプル２
+     * 詳細データで配列を扱う
+     */
     class LogDetailTest2 : LogDetail
     {
         // Consts

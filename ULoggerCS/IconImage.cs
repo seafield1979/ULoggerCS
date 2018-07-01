@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Drawing;
+using ULoggerCS.Utility;
 
 namespace ULoggerCS
 {
@@ -100,51 +101,69 @@ namespace ULoggerCS
             return data.ToArray();
         }
 
+        /**
+         * バイナリ形式のログをファイルに書き込む
+         * 
+         * @input fs : 書き込み先のファイルオブジェクト
+         * @input encoding : 文字列のエンコードタイプ
+         */
+        public override void WriteToBinFile(UFileStream fs, Encoding encoding)
+        {
+            // 名前
+            fs.WriteSizeString(name, encoding);
+
+            // 画像データ
+            // 指定の画像ファイルをメモリに展開し書き込む
+            try
+            {
+                // 画像ファイルから画像のbyte配列を取得する
+                if (imagePath != null && File.Exists(imagePath))
+                {
+                    fs.WriteSizeBytes(File.ReadAllBytes(imagePath));
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
     }
 
 
     class IconImages
     {
         // Variables
-        List<IconImage> list;
+        List<IconImage> images;
 
         // Constructor
         public IconImages()
         {
-            list = new List<IconImage>();
+            images = new List<IconImage>();
         }
 
         // Methods
         public void Add(string name, string imagePath)
         {
             IconImage image = new IconImage(name, imagePath);
-            list.Add(image);
+            images.Add(image);
         }
 
         public void Add(IconImage image)
         {
-            list.Add(image);
+            images.Add(image);
         }
 
-        public void WriteToFile(StreamWriter sw)
-        {
-            sw.WriteLine("<image>");
-
-            foreach (IconImage image in list)
-            {
-                sw.WriteLine("\t" + image.ToString());
-            }
-
-            sw.WriteLine("</image>");
-        }
-
+        /** 
+         * テキスト形式のログファイルに書き込む用の文字列に変換する
+         */
         override public string ToString()
         {
             StringBuilder sb = new StringBuilder();
 
             sb.AppendLine("<image>");
 
-            foreach (IconImage image in list)
+            foreach (IconImage image in images)
             {
                 sb.AppendLine("\t" + image.ToString());
             }
@@ -154,18 +173,53 @@ namespace ULoggerCS
             return sb.ToString();
         }
 
+        /**
+         * バイナリ形式のログファイルに書き込むためのバイト配列に変換する
+         */
         public byte[] ToBinary()
         {
             List<byte> data = new List<byte>(1000);
 
-            data.AddRange(BitConverter.GetBytes(list.Count));
+            data.AddRange(BitConverter.GetBytes(images.Count));
 
-            foreach (IconImage image in list)
+            foreach (IconImage image in images)
             {
                 data.AddRange(image.ToBinary());
             }
 
             return data.ToArray();
+        }
+
+        /**
+         * テキスト形式のログファイルに書き込む
+         * 
+         * @input sw: 書き込み先のファイルオブジェクト
+         */
+        public void WriteToTextFile(StreamWriter sw)
+        {
+            sw.WriteLine("<image>");
+
+            foreach (IconImage image in images)
+            {
+                sw.WriteLine("\t" + image.ToString());
+            }
+
+            sw.WriteLine("</image>");
+        }
+
+        /**
+         * バイナリ形式のログファイルに書き込む
+         * 
+         * @input fs: 書き込み先のファイルオブジェクト
+         */
+        public void WriteToBinFile(UFileStream fs)
+        {
+            fs.WriteInt32(images.Count);
+
+            foreach (IconImage image in images)
+            {
+                fs.WriteBytes(image.ToBinary());
+            }
         }
 
     }

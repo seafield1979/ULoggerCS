@@ -3,20 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ULoggerCS.Utility;
 
 /**
  * ログデータ(1件１件の表示されるログ情報)
  */
 namespace ULoggerCS
 {
+    /**
+     * ULogViewで画面に表示されるログデータ
+     */
     class LogData : Log
     {
         //
         // Properties
         //
-        private int logId;              // log id
+        private UInt32 logId;           // log id
         private LogDataType logType;    // type of log data
-        private int laneId;             // lane id
+        private UInt32 laneId;          // lane id
         private string text;            // text
         private double time;            // time of log
         private LogDetail detail;		// detail of log
@@ -24,33 +28,29 @@ namespace ULoggerCS
         // Constructor
         public LogData()
         {
-
         }
-        public LogData(double _time, int _logId, int _laneId, LogDataType _logType, string _text, LogDetail _detail)
+
+        public LogData(double time, UInt32 logId, UInt32 laneId, LogDataType logType, string text, LogDetail detail)
         {
-            time = _time;
-            logId = _logId;
-            laneId = _laneId;
-            logType = _logType;
-            if (_text != null)
+            this.time = time;
+            this.logId = logId;
+            this.laneId = laneId;
+            this.logType = logType;
+            if (this.text != null)
             {
                 // コピーコンストラクタでコピーを作成
                 // ※ログをファイルに出力するまでにコピー元が存在しているとは限らないため
-                text = String.Copy(_text);
+                this.text = String.Copy(text);
             }
-            if (_detail != null)
+            if (detail != null)
             {
-                detail = _detail.CreateCopy();
+                this.detail = detail.CreateCopy();
             }
         }
 
-        // Finalizer
-        ~LogData()
-        {
-            text = null;
-            detail = null;
-        }
-
+        /**
+         * テキスト形式のログファイルに出力する文字列
+         */
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -117,6 +117,50 @@ namespace ULoggerCS
             }
 
             return data.ToArray();
+        }
+
+        /**
+         * バイナリ形式のログファイルにログを出力する
+         * 
+         * @output fs: 書き込み先のファイルオブジェクト
+         * @output encoding: 文字列のエンコードタイプ
+         */
+        public override void WriteToBinFile(UFileStream fs, Encoding encoding)
+        {
+            // データログ
+            fs.WriteByte((byte)LogType.Data);
+            // ログID
+            fs.WriteUInt32(logId);
+            // ログタイプ
+            fs.WriteByte((byte)logType);
+            // 表示レーンID
+            fs.WriteUInt32(laneId);
+
+            if (text == null)
+            {
+                //タイトルの長さ
+                fs.WriteUInt32((UInt32)0);
+            }
+            else
+            {
+                //タイトル
+                fs.WriteSizeString(text, encoding);
+            }
+            //時間
+            fs.WriteDouble(time);
+            if (detail == null)
+            {
+                // ログデータ(詳細)の種類
+                fs.WriteByte((byte)DetailDataType.None);
+            }
+            else
+            {
+                // ログデータ(詳細)の種類
+                fs.WriteByte(detail.dataTypeByte());
+                // ログデータ(詳細)
+                fs.WriteSizeString(detail.ToString(), encoding);
+            }
+
         }
     }
 }

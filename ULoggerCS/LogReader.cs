@@ -602,7 +602,7 @@ namespace ULoggerCS
                             string[] splitted = line.Split(':');
                             if (splitted.Length >= 2)
                             {
-                                encoding = GetEncodingFromStr(splitted[1].ToLower());
+                                encoding = UUtility.GetEncodingFromStr(splitted[1].ToLower());
                             }
                         }
                     }
@@ -616,41 +616,6 @@ namespace ULoggerCS
                 return encoding;
             }
         }  // GetEncoding()
-
-        /**
-         * テキストからエンコーディングを取得する
-         * @input encStr: エンコード名
-         */
-        private static Encoding GetEncodingFromStr(string encStr)
-        {
-            Encoding encoding = Encoding.UTF8;      // デフォルトのエンコード
-
-            switch (encStr.ToLower())
-            {
-                case "ascii":
-                    encoding = Encoding.ASCII;
-                    break;
-                case "utf7":
-                case "utf-7":
-                    encoding = Encoding.UTF7;
-                    break;
-                case "utf8":
-                case "utf-8":
-                    encoding = Encoding.UTF8;
-                    break;
-                case "utf32":
-                case "utf-32":
-                    encoding = Encoding.UTF32;
-                    break;
-                case "unicode":
-                    encoding = Encoding.Unicode;
-                    break;
-                default:
-                    encoding = Encoding.GetEncoding(encStr);
-                    break;
-            }
-            return encoding;
-        }
 
         #endregion
 
@@ -690,7 +655,7 @@ namespace ULoggerCS
         {
             // 文字コードを取得
             string encStr = fs.GetSizeString();
-            this.encoding = GetEncodingFromStr(encStr);
+            this.encoding = UUtility.GetEncodingFromStr(encStr);
             fs.EncodingType = encoding;
             
             // ログID情報
@@ -806,23 +771,24 @@ namespace ULoggerCS
          */
         private void ReadLogBodyBin(UFileStream fs)
         {
-            // エリア、ログ
-
-            // 件数取得
-            int logNum = fs.GetInt32();
-
-            for(int i=0; i< logNum; i++)
+            while (!fs.EndOfStream())
             {
-                // 種類を取得
-                LogType type = (LogType)fs.GetByte();
+                // 件数取得
+                int logNum = fs.GetInt32();
 
-                if (type == LogType.Data)
+                for (int i = 0; i < logNum; i++)
                 {
-                    ReadLogDataBin(fs);
-                }
-                else
-                {
-                    ReadLogAreaBin(fs);
+                    // 種類を取得
+                    LogType type = (LogType)fs.GetByte();
+
+                    if (type == LogType.Data)
+                    {
+                        ReadLogDataBin(fs);
+                    }
+                    else
+                    {
+                        ReadLogAreaBin(fs);
+                    }
                 }
             }
         }

@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace ULoggerCS
 {
+    /**
+     * LogDetailを継承したクラスのサンプル１
+     * 詳細データで文字列を扱う
+     */
     class LogDetailTest1 : LogDetail
     {
         // Properties

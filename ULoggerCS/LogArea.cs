@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ULoggerCS.Utility;
 
 namespace ULoggerCS
 {
     /*
+     * エリアタイプのログ
+     * エリアログに続くログは、エリアの中に入る
      * area,name:"エリア1",parent:"root"
      * area,name:"エリア2",parent:"エリア1",color:#00ff00
      */
@@ -17,12 +20,14 @@ namespace ULoggerCS
         //
         private string name;
 
+        // Area name
         public string Name
         {
             get { return name; }
             set { name = value; }
         }
 
+        // Parent area name
         private string parentName;
 
         public string ParentName
@@ -31,6 +36,7 @@ namespace ULoggerCS
             set { parentName = value; }
         }
 
+        // Area color
         private UInt32 color;
 
         public UInt32 Color
@@ -54,40 +60,68 @@ namespace ULoggerCS
             this.color = color;
         }
 
+        /**
+         * テキスト形式のログファイルに書き込む文字列
+         * 
+         * 例: area,name: "エリア1",parent: "root",color:FF112233
+         */
         override public string ToString()
         {
-            // area,name: "エリア1",parent: "root",color:FF112233
             return String.Format("area,name:\"{0}\",parent:\"{1}\",color:{2:X8}", name, parentName, color);
         }
 
         /**
-         * バイナリファイルに保存する形式のbyte配列を返す
+         * バイナリ形式のログファイルに保存する形式のbyte配列を返す
          */
         override public byte[] ToBinary()
         {
             List<byte> data = new List<byte>(1000);
 
-            // エリアログ
+            // Type of log (Area)
             data.Add((byte)LogType.Area);
 
-            // エリア名の長さ
+            // Length of area name
             byte[] nameData = Encoding.UTF8.GetBytes(name);
             data.AddRange(BitConverter.GetBytes(nameData.Length));
 
-            // エリア名
+            // Area name
             data.AddRange(nameData);
 
-            // 親のエリア名の長さ
+            // length of parent area name
             byte[] parentNameData = Encoding.UTF8.GetBytes(parentName);
             data.AddRange(BitConverter.GetBytes(parentNameData.Length));
 
-            // 親のエリア名
+            // parent area name
             data.AddRange(parentNameData);
 
-            // 色
+            // color
             data.AddRange(BitConverter.GetBytes(color));
 
             return data.ToArray();
         }
+
+        /**
+         * バイナリ形式のログファイルにログを出力する
+         * 
+         * @output fs: 書き込み先のファイルオブジェクト
+         * @output encoding: 文字列のエンコードタイプ
+         */
+        public override void WriteToBinFile(UFileStream fs, Encoding encoding)
+        {
+            // Type of log (Area)
+            fs.WriteByte((byte)LogType.Area);
+
+            // Length of area name
+            // Area name
+            fs.WriteSizeString(name, encoding);
+            
+            // parent area name
+
+            fs.WriteSizeString(parentName, encoding);
+            
+            // color
+            fs.WriteUInt32(color);
+        }
+
     }
 }

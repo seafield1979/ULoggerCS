@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ULoggerCS.Utility;
 
 namespace ULoggerCS
 {
@@ -21,8 +22,8 @@ namespace ULoggerCS
     // 本体以下のログの種類
     public enum LogType : byte
     {
-        Data = 1,       // データ
-        Area = 2        // エリア
+        Data = 1,       // データ(ログ)
+        Area = 2        // エリア(ログを入れる箱)
     }
 
     // Type of Log
@@ -35,7 +36,10 @@ namespace ULoggerCS
         Value          // 値
     }
 
-    // 抽象クラス
+    /**
+     * 抽象クラス
+     * ログバッファに追加するオブジェクトは、このクラスを派生すること
+     */
     abstract class Log
     {
         // Constructor
@@ -44,8 +48,14 @@ namespace ULoggerCS
         {
         }
 
-        //public abstract string ToString();
+        // Convert log to string
+        // public abstract string ToString();
+
+        // Convert log to byte array
         public abstract byte[] ToBinary();
+
+        // Write log to binary file
+        public abstract void WriteToBinFile(UFileStream fs, Encoding encoding);
     }
 
 }

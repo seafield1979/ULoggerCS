@@ -75,17 +75,19 @@ namespace ULoggerCS
         public MemLogArea()
         {
             this.name = "root";
+
+            timeStart = 10000000;
+            timeEnd = 0;
+            childArea = null;
+            logs = null;
         }
-        public MemLogArea(UInt32 id, string name, UInt32 color, MemLogArea parentArea)
+        public MemLogArea(UInt32 id, string name, UInt32 color, MemLogArea parentArea) : this()
         {
             this.name = name;
             this.color = color;
             this.parentArea = parentArea;
 
-            timeStart = 0;
-            timeEnd = 0;
-            childArea = null;
-            logs = null;
+            
         }
 
         //

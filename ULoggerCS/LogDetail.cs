@@ -32,11 +32,20 @@ namespace ULoggerCS
 
         // オブジェクトのコピーを作成する
         // 派生クラスで実装する。
+        // ※ログを追加してから実際にファイルに書き込むまでの間に詳細情報が変化、消滅してしまう場合がある。
         public abstract LogDetail CreateCopy();
 
-        //public abstract string ToString();
+        
+        // 詳細の種別を文字列で返す
         public abstract string dataTypeString();
+
+        // 詳細の種別をバイトで返す
         public abstract byte dataTypeByte();
+
+        // 詳細の文字列を返す
+        //public abstract string ToString();
+        
+        // 詳細の文字列をバイト配列で返す
         public abstract byte[] ToBinary();
     }
 }

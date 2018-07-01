@@ -12,25 +12,27 @@ namespace ULoggerCS
         Binary
     }
 
-    class Logs
+    /**
+     * １回のメモリ確保で生成されるログのブロック
+     */
+    class LogBlock
     {
-        public const int LOG_BLOCK_SIZE = 10;
+        //public const int LOG_BLOCK_SIZE = 100;
 
-        public Log[] logs = new Log[LOG_BLOCK_SIZE];
+        public Log[] logs;
 
         // Constructor
-        public Logs()
+        public LogBlock(int blockSize)
         {
-            for (int i = 0; i < LOG_BLOCK_SIZE; i++)
-            {
-                logs[i] = null;
-            }
+            logs = new Log[blockSize];
+
+            Clear();
         }
 
         // Clear
         public void Clear()
         {
-            for (int i = 0; i < LOG_BLOCK_SIZE; i++)
+            for (int i = 0; i < logs.Length; i++)
             {
                 logs[i] = null;
             }
@@ -45,13 +47,16 @@ namespace ULoggerCS
     class Logger
     {
         // Consts
-        public const int LOG_BUF_SIZE = 2;
-        public const int LOG_BLOCK_MAX = 10;
+        public const int LOG_BUF_SIZE = 2;      // Dobule buffer
+        //public const int LOG_BLOCK_MAX = 10;    // 確保可能なブロック数
 
         // Properties
         private LogIDs logIDs;
         private Lanes lanes;
         private IconImages images;
+
+        private int blockSize;          // １ブロックのログ数
+        private int blockMax;           // 確保できるブロック最大数
 
         private int writeBufferNo;      // 書き込みバッファ番号
         private int currentBufferNo;    // 現在のバッファ番号
@@ -59,7 +64,7 @@ namespace ULoggerCS
         private int currentPos;         // 現在のブロック内での位置
         private int[] allocatedBlockNum;  // 確保済みのブロック数
         private LogFileType fileType;   // ログファイルの種類
-        private string encodingType;    // 文字コードの種類
+        private Encoding encoding;      // 文字列のエンコーディングタイプ
 
         private bool isFirstBody = true;       // 最初に本体部分を書き込んだら false になる
         
@@ -68,16 +73,15 @@ namespace ULoggerCS
             get { return fileType; }
             set { fileType = value; }
         }
-        public string EncodingType
+
+        public Encoding Encoding
         {
-            get { return encodingType; }
-            set { encodingType = value; }
+            get { return encoding; }
+            set { encoding = value; }
         }
 
-
-
         // ダブルバッファなので２つ
-        private Logs[,] blocks = new Logs[LOG_BUF_SIZE, LOG_BLOCK_MAX];
+        private LogBlock[,] blocks;
 
         // for Timer
         TimeCountByPerformanceCounter pc;
@@ -93,22 +97,28 @@ namespace ULoggerCS
 
 
         // Constructor
-        public Logger()
+        public Logger(int blockSize = 100, int blockMax = 100)
         {
+            this.blockSize = blockSize;
+            this.blockMax = blockMax;
+
+            blocks = new LogBlock[LOG_BUF_SIZE, blockMax];
+
             for (int i = 0; i < LOG_BUF_SIZE; i++)
             {
-                for (int j = 0; j < LOG_BLOCK_MAX; j++)
+                for (int j = 0; j < blockMax; j++)
                 {
                     this.blocks[i,j] = null;
                 }
             }
+
             // 変数の初期化
             currentBufferNo = 0;
             currentBlockNo = 0;
             currentPos = 0;
             allocatedBlockNum = new int[LOG_BUF_SIZE];
             fileType = LogFileType.Text;
-            encodingType = "UTF8";          // デフォルトはUTF8
+            encoding = Encoding.UTF8;       // デフォルトはUTF8
 
             // 最初に２ブロック確保
             for (int i = 0; i < 2; i++)
@@ -186,13 +196,13 @@ namespace ULoggerCS
             {
 
                 // 現在のブロックに空きがないなら次のブロックへ
-                if (currentPos >= Logs.LOG_BLOCK_SIZE)
+                if (currentPos >= blockSize)
                 {
-                    if (currentBlockNo < LOG_BLOCK_MAX - 1)
+                    if (currentBlockNo < blockMax - 1)
                     {
                         currentBlockNo++;
                         currentPos = 0;
-                        if (allocatedBlockNum[currentBufferNo] < LOG_BLOCK_MAX)
+                        if (allocatedBlockNum[currentBufferNo] < blockMax)
                         {
                             AllocateBlock();
                         }
@@ -205,7 +215,7 @@ namespace ULoggerCS
                 }
 
                 // ログを追加
-                Logs block = blocks[currentBufferNo, currentBlockNo];
+                LogBlock block = blocks[currentBufferNo, currentBlockNo];
                 block.logs[currentPos] = log;
 
                 currentPos++;
@@ -214,7 +224,7 @@ namespace ULoggerCS
         }
 
         // ログID, ログ名, ログ種別, レーンID(or レーン名), ログ詳細(文字列))
-        public bool AddLogData(int logId, LogDataType logType, int laneId, string title)
+        public bool AddLogData(UInt32 logId, LogDataType logType, UInt32 laneId, string title)
         {
             string text = null;
             if (title != null)
@@ -224,7 +234,7 @@ namespace ULoggerCS
             return AddLogData(logId, logType, laneId, text, null);
         }
 
-        public bool AddLogData(int logId, LogDataType logType, int laneId, string title, LogDetail logDetail)
+        public bool AddLogData(UInt32 logId, LogDataType logType, UInt32 laneId, string title, LogDetail logDetail)
         {
             // ログを追加
             LogData data = new LogData(GetTime(), logId, laneId, logType, title, logDetail);
@@ -248,16 +258,6 @@ namespace ULoggerCS
         }
 
         /**
-         * ブロックの追加
-         * @input name: ブロック名
-         */
-        public void AddBlock(string name)
-        {
-            LogBlock log = new LogBlock(name);
-            AddLog(log);
-        }
-        
-        /**
          * ヘッダー部分をファイルに書き込む
          */
         public void WriteHeader()
@@ -278,14 +278,19 @@ namespace ULoggerCS
         public void WriteHeaderText()
         {
             // ファイルを開く (新規)
-            using (StreamWriter sw = new StreamWriter(logFilePath, false, Encoding.UTF8))
+            using (StreamWriter sw = new StreamWriter(logFilePath, false, encoding))
             {
                 sw.WriteLine("<head>");
-                sw.WriteLine("encoding:{0}", encodingType);
-                // 書き込み処理
-                sw.Write(lanes.ToString());
-                sw.Write(logIDs.ToString());
-                sw.Write(images.ToString());
+                sw.WriteLine("encoding:{0}", UUtility.GetEncodingStr(encoding));
+
+                // レーン
+                lanes.WriteToTextFile(sw);
+
+                // ログID
+                logIDs.WriteToTextFile(sw);
+
+                // アイコンイメージ
+                images.WriteToTextFile(sw);
 
                 sw.WriteLine("</head>");
             }
@@ -301,16 +306,16 @@ namespace ULoggerCS
             {
                 // エンコードの長さ
                 // エンコード
-                fs.WriteSizeString(encodingType, Encoding.UTF8);
-                
+                fs.WriteSizeString(UUtility.GetEncodingStr(encoding), Encoding.UTF8);
+
                 // ID情報
-                fs.WriteBytes(logIDs.ToBinary());
+                logIDs.WriteToBinFile(fs);
 
                 // レーン情報
-                fs.WriteBytes(lanes.ToBinary());
+                lanes.WriteToBinFile(fs);
 
                 // Icon image
-                fs.WriteBytes(images.ToBinary());
+                images.WriteToBinFile(fs);
             }
         }
 
@@ -346,9 +351,9 @@ namespace ULoggerCS
 
             // 書き込み完了したのでバッファをクリアする
             // ただし、メモリに確保した Logs は残しておく。
-            for (int i = 0; i < LOG_BLOCK_MAX; i++)
+            for (int i = 0; i < blockMax; i++)
             {
-                Logs _block = blocks[writeBufferNo, i];
+                LogBlock _block = blocks[writeBufferNo, i];
                 if (_block != null)
                 {
                     _block.Clear();
@@ -369,13 +374,13 @@ namespace ULoggerCS
                     isFirstBody = false;
                 }
 
-                for (int i = 0; i < LOG_BLOCK_MAX; i++)
+                for (int i = 0; i < blockMax; i++)
                 {
-                    Logs block = blocks[writeBufferNo, i];
+                    LogBlock block = blocks[writeBufferNo, i];
 
                     if (block != null)
                     {
-                        for (int j = 0; j < Logs.LOG_BLOCK_SIZE; j++)
+                        for (int j = 0; j < blockSize; j++)
                         {
                             if (block.logs[j] != null)
                             {
@@ -402,17 +407,17 @@ namespace ULoggerCS
                 // ログ件数
                 fs.WriteInt32(GetLogNum());
                 
-                for (int i = 0; i < LOG_BLOCK_MAX; i++)
+                for (int i = 0; i < blockMax; i++)
                 {
-                    Logs block = blocks[writeBufferNo, i];
+                    LogBlock block = blocks[writeBufferNo, i];
 
                     if (block != null)
                     {
-                        for (int j = 0; j < Logs.LOG_BLOCK_SIZE; j++)
+                        for (int j = 0; j < blockSize; j++)
                         {
                             if (block.logs[j] != null)
                             {
-                                fs.WriteBytes(block.logs[j].ToBinary());
+                                block.logs[j].WriteToBinFile(fs, Encoding.UTF8);
                             }
                         }
                     }
@@ -428,13 +433,13 @@ namespace ULoggerCS
         {
             int num = 0;
 
-            for (int i = 0; i < LOG_BLOCK_MAX; i++)
+            for (int i = 0; i < blockMax; i++)
             {
-                Logs block = blocks[writeBufferNo, i];
+                LogBlock block = blocks[writeBufferNo, i];
 
                 if (block != null)
                 {
-                    for (int j = 0; j < Logs.LOG_BLOCK_SIZE; j++)
+                    for (int j = 0; j < blockSize; j++)
                     {
                         if (block.logs[j] != null)
                         {
@@ -455,13 +460,13 @@ namespace ULoggerCS
                 return;
             }
 
-            for (int j = 0; j < LOG_BLOCK_MAX; j++)
+            for (int j = 0; j < blockMax; j++)
             {
-                Logs block = blocks[currentBufferNo,j];
+                LogBlock block = blocks[currentBufferNo,j];
 
                 if (block != null)
                 {
-                    for (int k = 0; k < Logs.LOG_BLOCK_SIZE; k++)
+                    for (int k = 0; k < blockSize; k++)
                     {
                         if (block.logs[k] != null)
                         {
@@ -483,10 +488,10 @@ namespace ULoggerCS
         public bool AllocateBlock()
         {
             // 現在のバッファーに空きがあるかを確認
-            if (allocatedBlockNum[currentBufferNo] < LOG_BLOCK_MAX)
+            if (allocatedBlockNum[currentBufferNo] < blockMax)
             {
                 // メモリ確保
-                blocks[currentBufferNo, allocatedBlockNum[currentBufferNo]] = new Logs();
+                blocks[currentBufferNo, allocatedBlockNum[currentBufferNo]] = new LogBlock(blockSize);
 
                 allocatedBlockNum[currentBufferNo]++;
 

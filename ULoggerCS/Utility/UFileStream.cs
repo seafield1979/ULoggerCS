@@ -64,6 +64,20 @@ namespace ULoggerCS.Utility
         }
         #endregion
 
+        /**
+         * ファイルポインタが末尾かどうかを返す
+         * 
+         * @output  true:末尾 / false:末尾でない
+         */
+        public bool EndOfStream()
+        {
+            if (fs.Length <= fs.Position)
+            {
+                return true;
+            }
+            return false;
+        }
+
         #region Write
 
         public void WriteBool(bool value)
@@ -135,6 +149,16 @@ namespace ULoggerCS.Utility
             {
                 fs.Write(bytes, 0, bytes.Length);
             }
+        }
+
+        /**
+         * バイト配列のサイズと本体を書き込む
+         */
+        public void WriteSizeBytes(byte[] bytes)
+        {
+            WriteUInt32((UInt32)bytes.Length);
+
+            WriteBytes(bytes);
         }
 
         public void WriteString(string value, Encoding encoding)

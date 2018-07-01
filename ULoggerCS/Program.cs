@@ -17,7 +17,7 @@ namespace ULoggerCS
 
 #if DEBUG
             myArgs.FilePath = @"C:\work\Github\ULoggerCS\Test\InputData\sample04";
-            myArgs.FileType = LogFileType.Text;
+            myArgs.FileType = LogFileType.Binary;
             myArgs.IsReadMode = true;
             if (myArgs.FileType == LogFileType.Text)
             {
@@ -52,10 +52,11 @@ namespace ULoggerCS
         public static void TestWrite1(string outputFilePath, LogFileType fileType)
         {
             // Loggerを作成
-            Logger logger = new Logger();
+            Logger logger = new Logger(100, 100);
 
             logger.FileType = fileType;
             logger.LogFilePath = outputFilePath;
+            logger.Encoding = Encoding.UTF8;
 
             //-----------------------------------
             // ヘッダー情報を追加
@@ -65,13 +66,13 @@ namespace ULoggerCS
             logger.AddLogID(3, "id3", UColor.Black);
             logger.AddLogID(4, "id4", UColor.Black);
 
-            logger.AddLane(1, "lane1", UColor.Black);
-            logger.AddLane(2, "lane2", UColor.Black);
-            logger.AddLane(3, "lane3", UColor.Black);
-            logger.AddLane(4, "lane4", UColor.Black);
+            logger.AddLane(1, "れーん１", UColor.Black);
+            logger.AddLane(2, "れーん２", UColor.Black);
+            logger.AddLane(3, "れーん３", UColor.Black);
+            logger.AddLane(4, "れーん４", UColor.Black);
 
-            logger.AddImage("icon1", @"C:\work\Github\ULoggerCS\Test\Image\icon1.bmp");
-            logger.AddImage("icon2", @"C:\work\Github\ULoggerCS\Test\Image\icon2.png");
+            logger.AddImage("あいこん１", @"C:\work\Github\ULoggerCS\Test\Image\icon1.bmp");
+            logger.AddImage("あいこん２", @"C:\work\Github\ULoggerCS\Test\Image\icon2.png");
 
             // ファイルに書き込み
             // ヘッダ書き込みはプログラム開始時のみ、ログ本体書き込みはバッファがいっぱいになるたびに何度も行われる。
@@ -81,34 +82,34 @@ namespace ULoggerCS
             // 本体部分を追加
             //-----------------------------------
             // エリアを追加
-            logger.AddArea("area1", null);
+            logger.AddArea("えりあ１", null);
 
             // ログを追加
             for (int i = 0; i < 100; i++)
             {
-                logger.AddLogData(1, LogDataType.Single, 1, "test1");
+                logger.AddLogData(1, LogDataType.Single, 1, "てすと１");
             }
 
             System.Threading.Thread.Sleep(500);
 
             // エリアを追加
-            logger.AddArea("area1-2", "area1");
+            logger.AddArea("えりあ１－２", "えりあ１");
 
             // 詳細ありのログを追加
             for (int i = 0; i < 100; i++)
             {
                 LogDetailTest1 detail = new LogDetailTest1();
-                detail.DetailText = "hoge123";
-                logger.AddLogData(1, LogDataType.Single, 1, "test2", detail);
+                detail.DetailText = "ほげ１２３";
+                logger.AddLogData(1, LogDataType.Single, 1, "てすと２", detail);
             }
             System.Threading.Thread.Sleep(500);
 
             // 詳細ありのログ２を追加
-            logger.AddArea("area1-3", "area1");
+            logger.AddArea("えりあ１－３", "えりあ１");
             LogDetailTest2 detail2 = new LogDetailTest2();
             detail2.Init();
-            detail2.setArray1(0, 10);
-            logger.AddLogData(1, LogDataType.Single, 1, "test3", detail2);
+            //detail2.setArray1(0, 10);
+            logger.AddLogData(1, LogDataType.Single, 1, "てすと３", detail2);
 
             System.Threading.Thread.Sleep(500);
 

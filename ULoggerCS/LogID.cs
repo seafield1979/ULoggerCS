@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ULoggerCS.Utility;
 
 namespace ULoggerCS
 {
@@ -117,30 +118,60 @@ namespace ULoggerCS
 
             return data.ToArray();
         }
+
+        /**
+         * バイナリ形式のログをファイルに書き込む
+         * 
+         * @input fs : 書き込み先のファイルオブジェクト
+         * @input encoding: 文字列のエンコードタイプ
+         */
+        public override void WriteToBinFile(UFileStream fs, Encoding encoding)
+        {
+            // ID
+            fs.WriteUInt32(id);
+
+            // ID名
+            fs.WriteSizeString(name, encoding);
+
+            // 色
+            fs.WriteUInt32(color);
+
+            // アイコン画像名の長さ
+            // アイコン画像名
+            if (imageName == null)
+            {
+                // 長さ:0 = なし
+                fs.WriteUInt32((UInt32)0);
+            }
+            else
+            {
+                fs.WriteSizeString(imageName, encoding);
+            }
+        }
     }
 
     class LogIDs
     {
         // Variables
-        private List<LogID> list;
+        private List<LogID> logIDs;
 
         // Constructor
         public LogIDs()
         {
-            list = new List<LogID>();
+            logIDs = new List<LogID>();
         }
 
         // Methods
         public bool Add(UInt32 id, string name, UInt32 color, UInt32 frameColor = 0xFF000000)
         {
             LogID logId = new LogID(id, name, color, frameColor);
-            list.Add(logId);
+            logIDs.Add(logId);
             return true;
         }
 
         public void Add(LogID logId)
         {
-            list.Add(logId);
+            logIDs.Add(logId);
         }
 
         /**
@@ -152,7 +183,7 @@ namespace ULoggerCS
 
             sb.AppendLine("<logid>");
 
-            foreach (LogID logId in list)
+            foreach (LogID logId in logIDs)
             {
                 sb.AppendLine("\t" + logId.ToString());
             }
@@ -170,15 +201,44 @@ namespace ULoggerCS
             List<byte> data = new List<byte>(1000);
 
             // ID情報の件数
-            data.AddRange(BitConverter.GetBytes(list.Count));
+            data.AddRange(BitConverter.GetBytes(logIDs.Count));
 
             // ID情報
-            foreach( LogID logId in list)
+            foreach( LogID logId in logIDs)
             {
                 data.AddRange(logId.ToBinary());
             }
 
             return data.ToArray();
+        }
+
+
+        /**
+         * テキスト形式のログファイルに書き込む
+         */
+        public void WriteToTextFile(StreamWriter sw)
+        {
+            sw.WriteLine("<logid>");
+
+            foreach (LogID logId in logIDs)
+            {
+                sw.WriteLine("\t" + logId.ToString());
+            }
+
+            sw.WriteLine("</logid>");
+        }
+
+        /**
+         * バイナリ形式のログファイルに書き込む
+         */
+        public void WriteToBinFile(UFileStream fs)
+        {
+            fs.WriteInt32( logIDs.Count );
+
+            foreach (LogID logID in logIDs)
+            {
+                fs.WriteBytes(logID.ToBinary());
+            }
         }
     }
 }
