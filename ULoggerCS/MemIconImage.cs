@@ -115,11 +115,11 @@ namespace ULoggerCS
             }
         }
 
-        public MemIconImage GetImage(string name)
+        public Image GetImage(string name)
         {
             if (images.ContainsKey(name))
             {
-                return images[name];
+                return images[name].Image;
             }
             return null;
         }

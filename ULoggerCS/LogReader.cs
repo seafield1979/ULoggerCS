@@ -22,7 +22,7 @@ namespace ULoggerCS
         private const int IMAGE_NAME_MAX = 64;      // 画像名のByte数
 
         public Lanes lanes = null;
-        public LogIDs logIDs = null;
+        public MemLogIDs logIDs = null;
         public MemIconImages images = null;
         public MemLogAreaManager areaManager = new MemLogAreaManager();
         public Encoding encoding;
@@ -144,9 +144,9 @@ namespace ULoggerCS
         /**
          * LogID情報を取得する
          */
-        private LogIDs GetLogIDsText(StreamReader sr)
+        private MemLogIDs GetLogIDsText(StreamReader sr)
         {
-            LogIDs _logIDs = new LogIDs();
+            MemLogIDs _logIDs = new MemLogIDs();
 
             while (!sr.EndOfStream)
             {
@@ -165,7 +165,7 @@ namespace ULoggerCS
                 }
 
                 // レーン情報を取得
-                LogID logID = new LogID();
+                MemLogID logID = new MemLogID();
 
                 foreach (KeyValuePair<string, string> kvp in fields)
                 {
@@ -189,6 +189,7 @@ namespace ULoggerCS
                                 logID.Color = Convert.ToUInt32(kvp.Value, 16);
                                 break;
                             case "image":
+                                logID.Image = images.GetImage(kvp.Value);
                                 break;
                         }
                     }
@@ -456,9 +457,11 @@ namespace ULoggerCS
          * @input fields:
          * @output  取得したエリアデータ
          */
-        private static MemLogArea GetMemAreaText(Dictionary<string,string> fields, MemLogAreaManager manager)
+        private MemLogArea GetMemAreaText(Dictionary<string,string> fields, MemLogAreaManager manager)
         {
             MemLogArea area = new MemLogArea();
+
+            // area,name:"area1",parent:"root",color=FF000000, image="icon1"
 
             foreach (KeyValuePair<string, string> kvp in fields)
             {
@@ -475,10 +478,10 @@ namespace ULoggerCS
                         case "color":
                             area.Color = Convert.ToUInt32(kvp.Value, 16);
                             break;
-                        case "image":       // todo
+                        case "image":
+                            area.Image = images.GetImage(kvp.Value);
                             break;
                     }
-                    // area,name:"area1",parent:"root",color=FF000000
                 }
             }
             return area;
@@ -666,15 +669,21 @@ namespace ULoggerCS
 
             // アイコン画像
             images = ReadLogImagesBin(fs);
+
+            // ログIDの画像を設定する
+            foreach (MemLogID logId in logIDs)
+            {
+                logId.Image = images.GetImage(logId.ImageName);
+            }
         }
 
         /**
          * バイナリログのログID情報を読み込む
          * 
          */
-        private LogIDs ReadLogIDsBin(UFileStream fs)
+        private MemLogIDs ReadLogIDsBin(UFileStream fs)
         {
-            LogIDs _logIds = new LogIDs();
+            MemLogIDs _logIds = new MemLogIDs();
 
             // 件数取得
             int size = fs.GetInt32();
@@ -682,7 +691,7 @@ namespace ULoggerCS
             for (int i = 0; i < size; i++)
             {
                 // 1件分のログを取得
-                LogID logId = new LogID();
+                MemLogID logId = new MemLogID();
 
                 // ID
                 logId.ID = fs.GetUInt32();
@@ -694,6 +703,7 @@ namespace ULoggerCS
                 logId.Color = fs.GetUInt32();
 
                 // アイコン画像名
+                // 画像はアイコン画像を読み込んでから設定する
                 logId.ImageName = fs.GetSizeString();
 
                 _logIds.Add(logId);
@@ -888,6 +898,9 @@ namespace ULoggerCS
 
         #endregion
 
+        #region Common
+        
+        #endregion
 
         #region Debug
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Drawing;
 
 /**
  * ULogViewでメモリ情報に展開されたログデータ
@@ -19,7 +20,7 @@ namespace ULoggerCS
         private UInt32 color;           // エリアの色
         private double timeStart;       // 開始時間(最初のログ時間)
         private double timeEnd;         // 終了時間(最後のログ時間)
-        private string imageName;       // 画像名
+        private Image image;            // 画像
 
         private List<MemLogArea> childArea;     // 配下のエリア(areaTypeがDirの場合のみ使用)
         private List<MemLogData> logs;      // 配下のログ(areaTypeがDataの場合のみ使用)
@@ -43,10 +44,10 @@ namespace ULoggerCS
             set { color = value; }
         }
 
-        public string ImageName
+        public Image Image
         {
-            get { return imageName; }
-            set { imageName = value; }
+            get { return image; }
+            set { image = value; }
         }
         public double TimeStart
         {
@@ -150,9 +151,9 @@ namespace ULoggerCS
             {
                 sb.Append(String.Format(" timeEnd:{0}", timeEnd));
             }
-            if (imageName != null)
+            if (image != null)
             {
-                sb.Append(String.Format(" imageName:{0}", imageName));
+                sb.Append(String.Format(" imageSize:{0}", image.Size));
             }
 
             //if (parentArea != null)
@@ -189,9 +190,9 @@ namespace ULoggerCS
             {
                 sw.Write(",timeEnd:{0}", timeEnd);
             }
-            if (imageName != null)
+            if (image != null)
             {
-                sw.Write(",imageName:{0}", imageName);
+                sw.Write(",imageSize:{0}", image.Size);
             }
 
             sw.WriteLine();
