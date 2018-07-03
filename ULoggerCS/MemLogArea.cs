@@ -22,10 +22,10 @@ namespace ULoggerCS
         private double timeEnd;         // 終了時間(最後のログ時間)
         private Image image;            // 画像
 
-        private List<MemLogArea> childArea;     // 配下のエリア(areaTypeがDirの場合のみ使用)
+        private List<MemLogArea> childArea;  // 配下のエリア(areaTypeがDirの場合のみ使用)
         private List<MemLogData> logs;      // 配下のログ(areaTypeがDataの場合のみ使用)
         private MemLogArea parentArea;      // 親のエリア
-
+        
         public MemLogArea ParentArea
         {
             get { return parentArea; }
@@ -87,8 +87,6 @@ namespace ULoggerCS
             this.name = name;
             this.color = color;
             this.parentArea = parentArea;
-
-            
         }
 
         //
@@ -151,15 +149,15 @@ namespace ULoggerCS
             {
                 sb.Append(String.Format(" timeEnd:{0}", timeEnd));
             }
+            if (logs != null)
+            {
+                sb.AppendFormat(" logCount:{0}", logs.Count);
+            }
             if (image != null)
             {
                 sb.Append(String.Format(" imageSize:{0}", image.Size));
             }
 
-            //if (parentArea != null)
-            //{
-            //    sb.Append(String.Format(" paretArea:{0}", parentArea));
-            //}
             sb.AppendLine("");
 
             // ログデータ
@@ -193,6 +191,14 @@ namespace ULoggerCS
             if (image != null)
             {
                 sw.Write(",imageSize:{0}", image.Size);
+            }
+            if (logs != null)
+            {
+                sw.Write(",logCount:{0}", logs.Count);
+            }
+            if (parentArea != null)
+            {
+                sw.Write(",parentArea:{0}", parentArea.Name);
             }
 
             sw.WriteLine();
@@ -315,9 +321,9 @@ namespace ULoggerCS
 
             while(area != rootArea)
             {
-                if (area.ParentArea.Name.Equals(name))
+                if (area.Name.Equals(name))
                 {
-                    return area.ParentArea;
+                    return area;
                 }
                 area = area.ParentArea;
             }

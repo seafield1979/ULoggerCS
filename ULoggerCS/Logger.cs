@@ -2,6 +2,8 @@
 using System.Text;
 using ULoggerCS.Utility;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ULoggerCS
 {
@@ -54,6 +56,7 @@ namespace ULoggerCS
         private LogIDs logIDs;
         private Lanes lanes;
         private IconImages images;
+        private int logCnt;
 
         private int blockSize;          // １ブロックのログ数
         private int blockMax;           // 確保できるブロック最大数
@@ -66,6 +69,7 @@ namespace ULoggerCS
         private LogFileType fileType;   // ログファイルの種類
         private Encoding encoding;      // 文字列のエンコーディングタイプ
 
+        private bool isWriting = false;         // ファイルに書き込み中にtrueになる
         private bool isFirstBody = true;       // 最初に本体部分を書き込んだら false になる
         
         public LogFileType FileType
@@ -113,6 +117,7 @@ namespace ULoggerCS
             }
 
             // 変数の初期化
+            logCnt = 0;
             currentBufferNo = 0;
             currentBlockNo = 0;
             currentPos = 0;
@@ -213,11 +218,11 @@ namespace ULoggerCS
                         WriteBody();
                     }
                 }
-
                 // ログを追加
                 LogBlock block = blocks[currentBufferNo, currentBlockNo];
                 block.logs[currentPos] = log;
 
+                logCnt++;
                 currentPos++;
             }
             return true;
@@ -322,11 +327,23 @@ namespace ULoggerCS
         /**
          * 本体部分をファイルに書き込む
          */
-        public void WriteBody(bool isLast = false)
+        public async void WriteBody(bool isLast = false)
         {
 #if DEBUG
-            DebugPrint();
+            //DebugPrint();
 #endif
+            // 前回の書き込み完了を待つ
+            if (isWriting) {
+                Console.WriteLine("waiting for file writing.");
+                if (isWriting)
+                {
+                    Thread.Sleep(500);
+                    Console.Write(".");
+                }
+            }
+
+            isWriting = true;
+
             // バッファを切り替え
             writeBufferNo = currentBufferNo;
             currentBufferNo = (currentBufferNo + 1) & 0x1;
@@ -339,32 +356,36 @@ namespace ULoggerCS
                 AllocateBlock();
             }
 
-            // Todo バックグラウンドで処理する
-            if (fileType == LogFileType.Text)
-            {
-                WriteBodyText(isLast);
-            }
-            else
-            {
-                WriteBodyBin();
-            }
-
-            // 書き込み完了したのでバッファをクリアする
-            // ただし、メモリに確保した Logs は残しておく。
-            for (int i = 0; i < blockMax; i++)
-            {
-                LogBlock _block = blocks[writeBufferNo, i];
-                if (_block != null)
+            // バックグラウンドで処理する
+            Task<int> task = Task.Run<int>(() => {
+                if (fileType == LogFileType.Text)
                 {
-                    _block.Clear();
+                    WriteBodyText(isLast);
                 }
-            }
+                else
+                {
+                    WriteBodyBin();
+                }
+                // 書き込み完了したのでバッファをクリアする
+                // ただし、メモリに確保した Logs は残しておく。
+                for (int i = 0; i < blockMax; i++)
+                {
+                    LogBlock _block = blocks[writeBufferNo, i];
+                    if (_block != null)
+                    {
+                        _block.Clear();
+                    }
+                }
+                isWriting = false;
+                return 0;    
+            });
+            int result = await task;
         }
 
         /**
          * 本体部分をテキスト形式で書き込む
          */
-        public void WriteBodyText(bool isLast)
+            public void WriteBodyText(bool isLast)
         {
             using (StreamWriter sw = new StreamWriter(logFilePath, true, Encoding.UTF8))
             {

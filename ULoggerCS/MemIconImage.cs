@@ -82,7 +82,7 @@ namespace ULoggerCS
             sb.AppendFormat(@"name:""{0}""", name);
             if (image != null)
             {
-                sb.AppendFormat(@"imageSize:""{0}""", image.Size);
+                sb.AppendFormat(@",imageSize:{0}", image.Size);
             }
 
             return sb.ToString();

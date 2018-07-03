@@ -859,10 +859,6 @@ namespace ULoggerCS
             //ログデータ（詳細）の種類
             log.DetailType = (DetailDataType)fs.GetByte();
 
-            if (log.DetailType == DetailDataType.Array)
-            {
-                Console.WriteLine("hoge");
-            }
             //ログデータ(詳細)のサイズ
             //ログデータ(詳細)
             if (log.DetailType != DetailDataType.None)

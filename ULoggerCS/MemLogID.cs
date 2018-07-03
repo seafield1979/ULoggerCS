@@ -81,6 +81,20 @@ namespace ULoggerCS
         //
         // Methods
         //
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("id:{0}", id);
+            sb.AppendFormat(",name:{0}", name);
+            sb.AppendFormat(",color:{0:X8}", color);
+            sb.AppendFormat(",frameColor:{0:X8}", frameColor);
+            if (image != null)
+            {
+                sb.AppendFormat(",image:{0}byte", image.Size);
+            }
+            return sb.ToString();
+        }
     }
 
     class MemLogIDs : IEnumerator
@@ -113,6 +127,20 @@ namespace ULoggerCS
             {
                 yield return logID;
             }
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("<logID>");
+            foreach (MemLogID logID in logIDs)
+            {
+                sb.AppendFormat("\t{0}\r\n", logID.ToString());
+            }
+            sb.AppendLine("</logID>");
+
+            return sb.ToString();
         }
     }
 }
