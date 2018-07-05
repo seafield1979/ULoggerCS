@@ -41,14 +41,14 @@ namespace ULoggerCS
         // 
         // Properties
         //
-        Dictionary<string, Object> dicData;
+        Dictionary<string, Object> rootDic;
 
         //
         // Constructor
         //
         public MemJsonData()
         {
-            dicData = new Dictionary<string, object>();
+            rootDic = new Dictionary<string, object>();
         }
 
         //
@@ -65,7 +65,7 @@ namespace ULoggerCS
             char[] chars = jsonStr.ToCharArray();
             int offset = 0;
 
-            dicData = GetJson(chars, ref offset);
+            rootDic = GetJson(chars, ref offset);
         }
 
         /**
@@ -259,6 +259,37 @@ namespace ULoggerCS
             }
 
             return null;
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            DicToString(sb, rootDic, "");
+
+            return sb.ToString();
+        }
+
+        /**
+         * １階層分のリストを文字列に変換する
+         * 
+         * @input sb:    変換した結果を格納する先
+         * @input dic:   変換元のリスト
+         * @input nest:  階層をネストするたびに文字列の先頭に付加するスペース
+         */
+        private void DicToString(StringBuilder sb, Dictionary<string, object> dic, string nest)
+        {
+            foreach (KeyValuePair<string, object> kvp in dic)
+            {
+                if (kvp.Value is Dictionary<string, object>)
+                {
+                    DicToString(sb, (Dictionary<string, object>)kvp.Value, nest + "  ");
+                }
+                else if (kvp.Value is string)
+                {
+                    sb.AppendFormat("{0}[{1}]={2}\r\n",nest, kvp.Key, kvp.Value);
+                }
+            }
         }
 
     }
