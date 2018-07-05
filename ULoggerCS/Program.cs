@@ -12,6 +12,16 @@ namespace ULoggerCS
     {
         static void Main(string[] args)
         {
+            MemJsonData json = new MemJsonData();
+            json.Deserialize("{\"hoge\":1234, \"hoge2\":\"abc\", \"hoge3\":{\"hoge\":1234, \"hoge2\":\"abc\"}}");
+            //json.Deserialize("[1,{\"hoge\":1234, \"hoge2\":\"abc\"},3,4,5]");
+
+            Console.WriteLine(json.ToString());
+            Console.ReadLine();
+        }
+
+        static void Main2(string[] args)
+        {
             MyArgs myArgs = MyArgs.GetMyArgs(args);
             Console.WriteLine(myArgs);
 

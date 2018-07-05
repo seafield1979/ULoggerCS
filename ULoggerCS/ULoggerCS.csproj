@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -57,6 +58,7 @@
     <Compile Include="LogID.cs" />
     <Compile Include="LogReader.cs" />
     <Compile Include="MemIconImage.cs" />
+    <Compile Include="MemJsonData.cs" />
     <Compile Include="MemLogArea.cs" />
     <Compile Include="MemLogData.cs" />
     <Compile Include="MemLogID.cs" />
