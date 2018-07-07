@@ -47,6 +47,7 @@
     <Compile Include="ArgsDictionary.cs" />
     <Compile Include="IconImage.cs" />
     <Compile Include="IEnumerator.cs" />
+    <Compile Include="JsonData.cs" />
     <Compile Include="Lane.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="LogArea.cs" />

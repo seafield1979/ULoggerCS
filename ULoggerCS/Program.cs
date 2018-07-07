@@ -12,8 +12,47 @@ namespace ULoggerCS
     {
         static void Main(string[] args)
         {
-            // MemJsonDataテスト用
+            // JsonDataテスト用
+            // JsonDataにJson出力用のデータを作成する
+            JsonData json1 = new JsonData();
+            json1.AddString("hoge");
+            Console.WriteLine(json1.ToString());
 
+            JsonData json2 = new JsonData();
+            object[] array1 = new object[] { 1, 2, 3, 4, 5 };
+            json2.AddArray(array1);
+            Console.WriteLine(json2.ToString());
+
+            JsonData json3 = new JsonData();
+            var dic1 = new Dictionary<string, object>();
+            dic1["key1"] = 1;
+            dic1["key2"] = "test2";
+            dic1["key3"] = 3;
+            json3.AddDictionary(dic1);
+            Console.WriteLine(json3);
+
+            JsonData json4 = new JsonData();
+            JsonData json42 = new JsonData();
+            JsonData json43 = new JsonData();
+
+            var dic2 = new Dictionary<string, object>();
+            dic2["key1"] = "hoge";
+            dic2["key2"] = "hoge2";
+            json42.AddDictionary(dic2);
+            json43.AddArray(array1);
+
+            dic1["key1"] = 1;
+            dic1["key2"] = "test2";
+            dic1["key3"] = 3;
+            dic1["key4"] = json42;
+            dic1["key5"] = json43;
+            json3.AddDictionary(dic1);
+            Console.WriteLine(json3);
+
+
+
+            // MemJsonDataテスト用
+#if false
             string[] jsonStrs = new string[]
             {
                 "{ \"key1\" : { \"key1-1\" : \"value1\", \"key1-2\" : \"value2\" }, \"key2\" : { \"key1-1\" : \"value3\", \"key1-2\" : \"value4\" } }",
@@ -35,7 +74,7 @@ namespace ULoggerCS
                 MemJsonData json = MemJsonData.Deserialize(str);
                 Console.WriteLine(json.ToString());
             }
-
+#endif
             Console.ReadLine();
         }
 
