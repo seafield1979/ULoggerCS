@@ -12,12 +12,29 @@ namespace ULoggerCS
     {
         static void Main(string[] args)
         {
-            //json.Deserialize("{\"hoge\":1234, \"hoge2\":\"abc\", \"hoge3\":{\"hoge\":1234, \"hoge2\":\"abc\"}}");
-            MemJsonData json = MemJsonData.Deserialize("[1,{\"hoge\":1234, \"hoge2\":\"abc\"},3,4,5]");
-            Console.WriteLine(json.ToString());
+            // MemJsonDataテスト用
 
-            json = MemJsonData.Deserialize("[[[1]]]");
-            Console.WriteLine(json.ToString());
+            string[] jsonStrs = new string[]
+            {
+                "{ \"key1\" : { \"key1-1\" : \"value1\", \"key1-2\" : \"value2\" }, \"key2\" : { \"key1-1\" : \"value3\", \"key1-2\" : \"value4\" } }",
+                "[1,{\"hoge\":1234, \"hoge2\":\"abc\"},3,4,5]",
+                "[[[1]]]",
+                "12345",
+                "\"string1\"",
+                "{ \"key\" : \"value\" }",
+                "{ \"key\" : value   }",
+                "{ \"key1\" : \"value1\", \"key2\" : \"value2\"}",
+                "[ 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 ]"
+            };
+
+            for (int i = 0; i < jsonStrs.Length; i++)  
+            {
+                string str = jsonStrs[i];
+
+                Console.WriteLine("*** test" + i + " ***");
+                MemJsonData json = MemJsonData.Deserialize(str);
+                Console.WriteLine(json.ToString());
+            }
 
             Console.ReadLine();
         }
