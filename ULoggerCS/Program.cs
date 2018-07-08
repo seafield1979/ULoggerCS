@@ -19,42 +19,42 @@ namespace ULoggerCS
             // string
             //--------------------------
             Console.WriteLine("*** test1 ***");
-            JsonData json1 = new JsonData();
-            json1.AddString("hoge");
+            JsonData2 json1 = new JsonData2();
+            json1.Add("hoge");
             Console.WriteLine(json1.ToString());
 
             //--------------------------
             // array
             //--------------------------
             Console.WriteLine("*** test2 ***");
-            JsonData json2 = new JsonData();
+            JsonData2 json2 = new JsonData2();
             object[] array1 = new object[] { 1, 2, 3, 4, 5 };
-            json2.AddArray(array1);
+            json2.Add(array1);
             Console.WriteLine(json2.ToString());
 
             //--------------------------
             // dictionary
             //--------------------------
             Console.WriteLine("*** test3 ***");
-            JsonData json3 = new JsonData();
+            JsonData2 json3 = new JsonData2();
             var dic1 = new Dictionary<string, object>();
             dic1["key1"] = 1;
             dic1["key2"] = "test2";
             dic1["key3"] = 3;
-            json3.AddDictionary(dic1);
+            json3.Add(dic1);
             Console.WriteLine(json3);
 
 
             Console.WriteLine("*** test4 ***");
-            JsonData json4 = new JsonData();
-            JsonData json42 = new JsonData();
-            JsonData json43 = new JsonData();
+            JsonData2 json4 = new JsonData2();
+            JsonData2 json42 = new JsonData2();
+            JsonData2 json43 = new JsonData2();
 
             var dic2 = new Dictionary<string, object>();
             dic2["key1"] = "hoge";
             dic2["key2"] = "hoge2";
-            json42.AddDictionary(dic2);
-            json43.AddArray(array1);
+            json42.Add(dic2);
+            json43.Add(array1);
 
             var dic3 = new Dictionary<string, object>();
             dic3["key1"] = 1;
@@ -62,13 +62,13 @@ namespace ULoggerCS
             dic3["key3"] = 3;
             dic3["key4"] = json42;
             dic3["key5"] = json43;
-            json3.AddDictionary(dic3);
+            json3.Add(dic3);
             Console.WriteLine(json3);
 
 
             Console.WriteLine("*** test5 ***");
-            JsonData json5 = new JsonData();
-            json5.AddDictionary(dic1);
+            JsonData2 json5 = new JsonData2();
+            json5.Add(dic1);
             array1[2] = json5;
             Console.WriteLine(json2);
 
@@ -95,7 +95,7 @@ namespace ULoggerCS
                 string str = jsonStrs[i];
 
                 Console.WriteLine("*** test" + i + " ***");
-                MemJsonData json = MemJsonData.Deserialize(str);
+                MemJsonData2 json = MemJsonData2.Deserialize(str);
                 Console.WriteLine(json.ToString());
             }
 #endif

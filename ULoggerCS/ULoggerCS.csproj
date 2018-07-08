@@ -48,6 +48,7 @@
     <Compile Include="IconImage.cs" />
     <Compile Include="IEnumerator.cs" />
     <Compile Include="JsonData.cs" />
+    <Compile Include="JsonData2.cs" />
     <Compile Include="Lane.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="LogArea.cs" />
@@ -60,6 +61,7 @@
     <Compile Include="LogReader.cs" />
     <Compile Include="MemIconImage.cs" />
     <Compile Include="MemJsonData.cs" />
+    <Compile Include="MemJsonData2.cs" />
     <Compile Include="MemLogArea.cs" />
     <Compile Include="MemLogData.cs" />
     <Compile Include="MemLogID.cs" />
