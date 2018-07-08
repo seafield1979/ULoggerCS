@@ -66,6 +66,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utility\TimeCountByPerformanceCounter.cs" />
+    <Compile Include="Utility\UByteList.cs" />
     <Compile Include="Utility\UFileStream.cs" />
     <Compile Include="Utility\UUtility.cs" />
   </ItemGroup>

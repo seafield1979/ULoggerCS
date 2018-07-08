@@ -19,6 +19,7 @@ namespace ULoggerCS.Utility
         // Properties
         //
         FileStream fs;
+
         private Encoding encoding;
 
         public Encoding EncodingType
@@ -26,7 +27,6 @@ namespace ULoggerCS.Utility
             get { return encoding; }
             set { encoding = value; }
         }
-
 
         // Byteを読み込む先のバッファ。一番大きい Int64, Doubleが取得できる容量
         private byte[] buf = new byte[8]; 

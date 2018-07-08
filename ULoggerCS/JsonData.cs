@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ULoggerCS.Utility;
 
 namespace ULoggerCS
 {
@@ -17,6 +18,19 @@ namespace ULoggerCS
         Dictionary
     }
 
+    /**
+     * JSON形式のデータを作成するクラス
+     * 
+     * JSONなのでツリー構造を作ることができる。ツリー構造を作るには、JsonDataのobjに ArrayやDictionaryのデータを設定して、
+     * それらの各要素に JsonData を追加してやる。
+     * 例:
+     * JsonData(Array) +---- JsonData(Array) +---- String
+     *                 |                     +---- String
+     *                 |                     +---- String
+     *                 +---- JsonData(Dictionary) +---- <Key,Value>
+     *                                            +---- <Key,Value>
+     *                                            +---- <Key,Value>
+     */
     class JsonData
     {
         //
@@ -94,25 +108,17 @@ namespace ULoggerCS
                     sb.Append("[");
                     foreach (object value in (jsonData.Obj as object[]))
                     {
+                        if (cnt > 0)
+                        {
+                            sb.Append(",");
+                        }
                         if (value is JsonData)
                         {
                             JsonData json = (JsonData)value;
-                            if (json.DataType == JsonDataType.Dictionary)
-                            {
-                                ObjToString(sb, json);
-                            }
-                            else if (json.DataType == JsonDataType.Array)
-                            {
-                                ObjToString(sb, json);
-                            }
+                            ObjToString(sb, json);
                         }
-                        //else if (value is string)
                         else
                         {
-                            if (cnt > 0)
-                            {
-                                sb.Append(",");
-                            }
                             sb.Append(value);
                         }
                         cnt++;
@@ -124,36 +130,28 @@ namespace ULoggerCS
                     sb.Append("{");
                     foreach (KeyValuePair<string, object> kvp in (jsonData.Obj as Dictionary<string, object>))
                     {
+                        if (cnt > 0)
+                        {
+                            sb.Append(",");
+                        }
+
+                        // "キー名":
+                        sb.AppendFormat("\"{0}\":", kvp.Key);
+
                         if (kvp.Value is JsonData)
                         {
-                            if (cnt > 0)
-                            {
-                                sb.Append(",");
-                            }
-                            sb.AppendFormat("\"{0}\":", kvp.Key);
                             JsonData json = (JsonData)kvp.Value;
-                            if (json.DataType == JsonDataType.Dictionary)
-                            {
-                                ObjToString(sb, json);
-                            }
-                            else if (json.DataType == JsonDataType.Array)
-                            {
-                                ObjToString(sb, json);
-                            }
+                            ObjToString(sb, json);
                         }
                         else 
                         {
-                            if (cnt > 0)
-                            {
-                                sb.Append(",");
-                            }
                             if (kvp.Value is string)
                             {
-                                sb.AppendFormat("\"{0}\":\"{1}\"", kvp.Key, kvp.Value);
+                                sb.AppendFormat("\"{0}\"", kvp.Value);
                             }
                             else
                             {
-                                sb.AppendFormat("\"{0}\":{1}", kvp.Key, kvp.Value);
+                                sb.Append(kvp.Value);
                             }
                             
                         }
@@ -163,5 +161,78 @@ namespace ULoggerCS
                     break;
             }
         }
+
+        /**
+         * バイナリに変換する
+         * ※バイナリにするメリットがないため未使用
+         */
+#if false
+        public byte[] ToBinary()
+        {
+            var list = new UByteList();
+
+            ObjToBinary(list, this);
+
+            return list.ToArray();
+        }
+
+        private static byte[] ObjToBinary(UByteList list, JsonData jsonData)
+        {
+            int cnt = 0;
+
+            switch (jsonData.dataType)
+            {
+                case JsonDataType.String:
+                    list.AddByte((byte)JsonDataType.String);
+                    list.AddSizeString((string)jsonData.obj);
+                    break;
+                case JsonDataType.Array:
+                    list.AddByte((byte)JsonDataType.Array);
+                    list.AddInt32(((object[])jsonData.Obj).Length);
+
+                    foreach (object value in (jsonData.Obj as object[]))
+                    {
+                        if (value is JsonData)
+                        {
+                            JsonData json = (JsonData)value;
+                            ObjToBinary(list, json);
+                        }
+                        else
+                        {
+                            list.AddObject(value);
+                        }
+                        cnt++;
+                    }
+                    break;
+                case JsonDataType.Dictionary:
+                    // データ種別
+                    list.AddByte((byte)JsonDataType.Dictionary);
+
+                    // 辞書型の項目数
+                    list.AddInt32(((Dictionary<string, object>)jsonData.Obj).Count);
+
+                    foreach (KeyValuePair<string, object> kvp in (jsonData.Obj as Dictionary<string, object>))
+                    {
+                        // キー文字列
+                        list.AddSizeString(kvp.Key);
+                        
+                        if (kvp.Value is JsonData)
+                        {
+                            // 配下のJsonを再帰呼び出し
+                            JsonData json = (JsonData)kvp.Value;
+                            ObjToBinary(list,json);
+                        }
+                        else
+                        {
+                            list.AddObject(kvp.Value);
+                        }
+                        cnt++;
+                    }
+                    break;
+            }
+
+            return list.ToArray();
+        }
+#endif
     }
 }
