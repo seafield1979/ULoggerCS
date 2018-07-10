@@ -70,11 +70,6 @@ namespace ULoggerCS
             return sb.ToString();
         }
 
-        public override string dataTypeString()
-        {
-            return "array";
-        }
-
         public override byte dataTypeByte()
         {
             return (byte)DetailDataType.Array;

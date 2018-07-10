@@ -95,24 +95,6 @@ namespace ULoggerCS
             set { time2 = value; }
         }
 
-        //表示用時間1(基準となる時間をもとに計算される値、例えばエリアの先頭からのオフセット等)
-        private double dispTime1;
-
-        public double DispTime1
-        {
-            get { return dispTime1; }
-            set { dispTime1 = value; }
-        }
-
-        //表示用時間2
-        private double dispTime2;
-
-        public double DispTime2
-        {
-            get { return dispTime2; }
-            set { dispTime2 = value; }
-        }
-
         //表示時間の末端の座標（横画面表示時に次のログと重ならないようにするために、表示テキストも含めた末尾の座標を保持する)
         private UInt32 endPos;
 
@@ -122,19 +104,10 @@ namespace ULoggerCS
             set { endPos = value; }
         }
 
-        //ログの詳細の種類
-        private DetailDataType detailType;
-
-        public DetailDataType DetailType
-        {
-            get { return detailType; }
-            set { detailType = value; }
-        }
-
         //ログの詳細(Todo 将来的に種別ごとの構造(配列やツリー等)にする）
-        private string detail;
+        private object detail;
 
-        public string Detail
+        public object Detail
         {
             get { return detail; }
             set { detail = value; }
@@ -153,19 +126,34 @@ namespace ULoggerCS
 
         //表示幅
         //１レーンにログが重なった場合に、１ログの幅がレーン幅を分割したサイズになる。このときの幅。
+        private int width;
+
+        public int Width
+        {
+            get { return width; }
+            set { width = value; }
+        }
 
         //表示位置
         // １レーンを複数のログを並べた場合の、表示座標。
+        private int pos;
+
+        public int Pos
+        {
+            get { return pos; }
+            set { pos = value; }
+        }
+
 
         //
         // Constructor
         //
         public MemLogData()
         {
-            this.detailType = DetailDataType.None;
+            
         }
 
-        public MemLogData(UInt32 id, LogType type, byte laneId, double time1, double time2, string text, DetailDataType detailType, string detailText)
+        public MemLogData(UInt32 id, LogType type, byte laneId, double time1, double time2, string text, string detailText)
         {
             this.id = id;
             this.type = (MemLogType)type;
@@ -173,8 +161,8 @@ namespace ULoggerCS
             this.time1 = time1;
             this.time2 = time2;
             this.text = text;
-            this.detailType = detailType;
-            this.detail = detailText;
+
+            this.detail = MemDetailData.Deserialize(detailText);
         }
 
         /**
@@ -193,8 +181,7 @@ namespace ULoggerCS
                 sb.AppendFormat(" time2:{0}", time2);
             }
             sb.AppendFormat(" text:{0}", text);
-            sb.AppendFormat(" detailType:{0}", detailType);
-            if (detailType != DetailDataType.None)
+            if (detail != null)
             {
                 sb.AppendFormat(" detailText:{0}", detail);
             }

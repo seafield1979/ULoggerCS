@@ -7,36 +7,33 @@ using System.Threading.Tasks;
 namespace ULoggerCS
 {
     /**
-     * Json形式のデータ
-     * 
-     * key = string, value = string
-     * { "key" : "value" }
-     * 
-     * key = string, value = numeric value
-     * { "key" : value }
-     * 
-     * dictionary
-     * { "key1" : "value1", "key2" : "value2" ...}
-     * 
-     * array
-     * [ value1, value2, value3, ... ]
-     * 
-     * tree
-     * { "key1" : {"key1-1" : "value", "key1-2" : "value" }, "key2" : {"key1-1" : "value", "key1-2" : "value" }}
-     */
+  * Json形式のデータ
+  * 
+  * key = string, value = string
+  * { "key" : "value" }
+  * 
+  * key = string, value = numeric value
+  * { "key" : value }
+  * 
+  * dictionary
+  * { "key1" : "value1", "key2" : "value2" ...}
+  * 
+  * array
+  * [ value1, value2, value3, ... ]
+  * 
+  * tree
+  * { "key1" : {"key1-1" : "value", "key1-2" : "value" }, "key2" : {"key1-1" : "value", "key1-2" : "value" }}
+  */
 
-    /**
-     * Dictionaryのデータを読み込む際のモード
-     */
-    enum EJsonReadMode: int
+    enum EJsonReadMode : int
     {
-        None = 0,
+        None = 0,       
         DicKey,         // 辞書型のキーを読み込み中
         DicValue,       // 辞書型の値を読み込み中
         Array           // 配列の値を読み込み中
     }
 
-    class MemJsonData
+    class MemDetailData
     {
         // 
         // Properties
@@ -48,15 +45,6 @@ namespace ULoggerCS
         {
             get { return obj; }
             set { obj = value; }
-        }
-
-        // objに入っているデータの種類
-        private JsonDataType dataType;
-
-        public JsonDataType DataType
-        {
-            get { return dataType; }
-            set { dataType = value; }
         }
 
         //
@@ -72,12 +60,20 @@ namespace ULoggerCS
          * @input jsonStr : JSON形式の文字列
          * @output : メモリ上のツリー構造のオブジェクト
          */
-        public static MemJsonData Deserialize(string jsonStr)
+        public static MemDetailData Deserialize(string jsonStr)
         {
+            if (jsonStr == null || jsonStr.Length == 0)
+            {
+                return null;
+            }
+
             char[] chars = jsonStr.ToCharArray();
             int offset = 0;
 
-            return GetJson(chars, ref offset);
+            MemDetailData jsonData = new MemDetailData();
+
+            jsonData.Obj = GetJson(chars, ref offset);
+            return jsonData;
         }
 
         /**
@@ -87,15 +83,15 @@ namespace ULoggerCS
          * @input chars : シリアライズ対象のJSON形式のキャラ配列
          * @input offset : chars の参照位置
          */
-        private static MemJsonData GetJson(char[] chars,ref int offset)
+        private static object GetJson(char[] chars, ref int offset)
         {
             string keyStr = null;
             EJsonReadMode readMode = EJsonReadMode.None;
             var cbuf = new List<char>();
             object value = null;
-            MemJsonData topData = new MemJsonData();
-            
-            for (; offset < chars.Length; offset++) 
+            object newObj = null;
+
+            for (; offset < chars.Length; offset++)
             {
                 char c = chars[offset];
 
@@ -110,22 +106,19 @@ namespace ULoggerCS
                     case EJsonReadMode.None:
                         if (c == '[')
                         {
-                            topData.dataType = JsonDataType.Array;
-                            topData.Obj = new List<object>();
+                            newObj = new List<object>();
                             readMode = EJsonReadMode.Array;
                         }
                         else if (c == '{')
                         {
-                            topData.dataType = JsonDataType.Dictionary;
-                            topData.Obj = new Dictionary<string, object>();
+                            newObj = new Dictionary<string, object>();
                             readMode = EJsonReadMode.DicKey;
                         }
                         else if (c == '"')
                         {
-                            topData.dataType = JsonDataType.String;
-                            topData.Obj = GetString(chars, ref offset, true);
+                            newObj = GetString(chars, ref offset, true);
                         }
-                        else 
+                        else
                         {
                             // ダブルコートで囲まれていない文字列
                             for (; offset < chars.Length; offset++)
@@ -133,12 +126,11 @@ namespace ULoggerCS
                                 c = chars[offset];
                                 cbuf.Add(c);
                             }
-                            topData.dataType = JsonDataType.String;
-                            topData.obj = new String(cbuf.ToArray());
+                            newObj = new String(cbuf.ToArray());
                         }
                         break;
                     case EJsonReadMode.DicKey:
-                        switch(c)
+                        switch (c)
                         {
                             case '"':
                                 keyStr = GetString(chars, ref offset, false);
@@ -150,18 +142,18 @@ namespace ULoggerCS
                                 // 値を取得前なので、キーのみ
                                 if (keyStr != null)
                                 {
-                                    ((Dictionary<string, object>)topData.Obj)[keyStr] = "";
+                                    ((Dictionary<string, object>)newObj)[keyStr] = "";
                                 }
                                 break;
                             case ']':
-                                return topData;
+                                return newObj;
                         }
                         break;
                     case EJsonReadMode.DicValue:
                         if (keyStr == null)
                         {
                             // キーがない場合は値を取得しても意味がないのでスキップ
-                            for(; offset < chars.Length; offset++)
+                            for (; offset < chars.Length; offset++)
                             {
                                 c = chars[offset];
                                 if (c == ',')
@@ -170,7 +162,7 @@ namespace ULoggerCS
                                 }
                                 else if (c == '}')
                                 {
-                                    return topData;
+                                    return newObj;
                                 }
                             }
                         }
@@ -190,13 +182,13 @@ namespace ULoggerCS
                                 {
                                     value = new string(cbuf.ToArray());
                                 }
-                                ((Dictionary<string, object>)topData.Obj)[keyStr] = value;
+                                ((Dictionary<string, object>)newObj)[keyStr] = value;
                                 value = null;
                                 readMode = EJsonReadMode.DicKey;
 
                                 if (c == '}')
                                 {
-                                    return topData;
+                                    return newObj;
                                 }
                                 break;
                             default:
@@ -222,11 +214,11 @@ namespace ULoggerCS
                                     value = new string(cbuf.ToArray());
                                     cbuf.Clear();
                                 }
-                                ((List<object>)topData.Obj).Add(value);
+                                ((List<object>)newObj).Add(value);
                                 value = null;
                                 if (c == ']')
                                 {
-                                    return topData;
+                                    return newObj;
                                 }
                                 break;
                             default:
@@ -236,7 +228,7 @@ namespace ULoggerCS
                         break;
                 }
             }
-            return topData;
+            return newObj;
         }
 
 
@@ -248,7 +240,7 @@ namespace ULoggerCS
          * @input dqOn : ダブルクオートを残すかどうか(true:残す / false:残さない)
          * @output : 取得した文字列
          */
-        private static string GetString(char[] chars, ref int offset, bool dqOn )
+        private static string GetString(char[] chars, ref int offset, bool dqOn)
         {
             var cbuf = new List<char>();
             bool isEscape = false;
@@ -264,7 +256,7 @@ namespace ULoggerCS
                 char c = chars[offset];
                 if (isEscape)
                 {
-                    switch(c)
+                    switch (c)
                     {
                         case '\\':
                             cbuf.Add(c);
@@ -283,7 +275,8 @@ namespace ULoggerCS
                 }
                 if (c == '"')
                 {
-                    if (dqOn) {
+                    if (dqOn)
+                    {
                         // ダブルクオートを残す
                         return "\"" + (new string(cbuf.ToArray())) + "\"";
                     }
@@ -312,7 +305,7 @@ namespace ULoggerCS
         {
             StringBuilder sb = new StringBuilder();
 
-            ObjToString(sb, this, "");
+            ObjToString(sb, this.obj, "");
 
             return sb.ToString();
         }
@@ -321,72 +314,54 @@ namespace ULoggerCS
          * １階層分のリストを文字列に変換する
          * 
          * @input sb:    変換した結果を格納する先
-         * @input value: 変換元のデータ(string、array、dictionaryのどれか)
+         * @input nodeObj: 変換元のデータ(string、array、dictionaryのどれか)
          * @input nest:  階層をネストするたびに文字列の先頭に付加するスペース
          */
-        private static void ObjToString(StringBuilder sb, MemJsonData memJson, string nest)
+        private static void ObjToString(StringBuilder sb, object node, string nest)
         {
             int cnt = 0;
             string nest2;
 
-            switch(memJson.dataType)
+            if (node is string)
             {
-                case JsonDataType.String:
-                    sb.AppendFormat((string)memJson.Obj);
-                    break;
-                case JsonDataType.Array:
-                    sb.Append("[\r\n");
-                    nest2 = nest + "  ";
-                    foreach (object value in (memJson.Obj as List<object>))
+                sb.AppendFormat((string)node);
+            }
+            else if (node is List<object>) {
+                sb.Append("[\r\n");
+                nest2 = nest + "  ";
+                foreach (object value in (node as List<object>))
+                {
+                    if (value is List<object> || value is Dictionary<string, object>)
                     {
-                        if (value is MemJsonData)
-                        {
-                            sb.AppendFormat("{0}[{1}]=", nest2, cnt);
-                            MemJsonData json = (MemJsonData)value;
-                            if (json.DataType == JsonDataType.Dictionary)
-                            {
-                                ObjToString(sb, json, nest2);
-                            }
-                            else if (json.DataType == JsonDataType.Array)
-                            {
-                                ObjToString(sb, json, nest2);
-                            }
-                        }
-                        else if ( value is string)
-                        {
-                            sb.AppendFormat("{0}[{1}]={2}\r\n", nest2, cnt, value);
-                        }
-                        cnt++;
+                        sb.AppendFormat("{0}[{1}]=", nest2, cnt);
+                        ObjToString(sb, value, nest2);
                     }
-                    sb.AppendFormat("{0}]\r\n", nest);
-
-                    break;
-                case JsonDataType.Dictionary:
-                    sb.Append("{\r\n");
-                    nest2 = nest + "  ";
-                    foreach (KeyValuePair<string, object> kvp in (memJson.Obj as Dictionary<string, object>))
+                    else if (value is string)
                     {
-                        if (kvp.Value is MemJsonData)
-                        {
-                            sb.AppendFormat("{0}\"{1}\"=", nest2, kvp.Key);
-
-                            MemJsonData json = (MemJsonData)kvp.Value;
-                            if (json.DataType == JsonDataType.Dictionary)
-                            {
-                                ObjToString(sb, json, nest2);
-                            }
-                            else if (json.DataType == JsonDataType.Array)
-                            {
-                                ObjToString(sb, json, nest2);
-                            }
-                        }
-                        else if (kvp.Value is string)
-                        {
-                            sb.AppendFormat("{0}\"{1}\"={2}\r\n", nest2, kvp.Key, kvp.Value);
-                        }
+                        sb.AppendFormat("{0}[{1}]={2}\r\n", nest2, cnt, value);
                     }
-                    sb.AppendFormat("{0}}}\r\n", nest);
-                    break;
+                    cnt++;
+                }
+                sb.AppendFormat("{0}]\r\n", nest);
+            }
+            else if (node is Dictionary<string, object>)
+            {
+                sb.Append("{\r\n");
+                nest2 = nest + "  ";
+                foreach (KeyValuePair<string, object> kvp in (node as Dictionary<string, object>))
+                {
+                    if (kvp.Value is List<object> || kvp.Value is Dictionary<string, object>)
+                    { 
+                        sb.AppendFormat("{0}\"{1}\"=", nest2, kvp.Key);
+
+                        ObjToString(sb, kvp.Value, nest2);
+                    }
+                    else if (kvp.Value is string)
+                    {
+                        sb.AppendFormat("{0}\"{1}\"={2}\r\n", nest2, kvp.Key, kvp.Value);
+                    }
+                }
+                sb.AppendFormat("{0}}}\r\n", nest);
             }
         }
     }

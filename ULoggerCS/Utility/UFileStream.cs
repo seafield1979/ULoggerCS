@@ -161,7 +161,7 @@ namespace ULoggerCS.Utility
             WriteBytes(bytes);
         }
 
-        public void WriteString(string value, Encoding encoding)
+        public void WriteString(string value)
         {
             byte[] bytes = encoding.GetBytes(value);
             fs.Write(bytes, 0, bytes.Length);

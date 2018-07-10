@@ -23,7 +23,16 @@ namespace ULoggerCS
      *                                            +---- <Key,Value>
      *                                            +---- <Key,Value>
      */
-    class JsonData2
+
+    // ノードのデータ種別
+    enum JsonDataType : byte
+    {
+        String = 0,
+        Array,
+        Dictionary
+    }
+
+    class DetailData
     {
         //
         // Properties

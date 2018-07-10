@@ -57,11 +57,6 @@ namespace ULoggerCS
             return detailText.ToString();
         }
 
-        public override string dataTypeString()
-        {
-            return "text";
-        }
-
         public override byte dataTypeByte()
         {
             return (byte)(DetailDataType.Text);

@@ -10,7 +10,7 @@ namespace ULoggerCS
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main3(string[] args)
         {
             // JsonDataテスト用
 #if true
@@ -19,7 +19,7 @@ namespace ULoggerCS
             // string
             //--------------------------
             Console.WriteLine("*** test1 ***");
-            JsonData2 json1 = new JsonData2();
+            DetailData json1 = new DetailData();
             json1.Add("hoge");
             Console.WriteLine(json1.ToString());
 
@@ -27,7 +27,7 @@ namespace ULoggerCS
             // array
             //--------------------------
             Console.WriteLine("*** test2 ***");
-            JsonData2 json2 = new JsonData2();
+            DetailData json2 = new DetailData();
             object[] array1 = new object[] { 1, 2, 3, 4, 5 };
             json2.Add(array1);
             Console.WriteLine(json2.ToString());
@@ -36,7 +36,7 @@ namespace ULoggerCS
             // dictionary
             //--------------------------
             Console.WriteLine("*** test3 ***");
-            JsonData2 json3 = new JsonData2();
+            DetailData json3 = new DetailData();
             var dic1 = new Dictionary<string, object>();
             dic1["key1"] = 1;
             dic1["key2"] = "test2";
@@ -46,9 +46,9 @@ namespace ULoggerCS
 
 
             Console.WriteLine("*** test4 ***");
-            JsonData2 json4 = new JsonData2();
-            JsonData2 json42 = new JsonData2();
-            JsonData2 json43 = new JsonData2();
+            DetailData json4 = new DetailData();
+            DetailData json42 = new DetailData();
+            DetailData json43 = new DetailData();
 
             var dic2 = new Dictionary<string, object>();
             dic2["key1"] = "hoge";
@@ -67,7 +67,7 @@ namespace ULoggerCS
 
 
             Console.WriteLine("*** test5 ***");
-            JsonData2 json5 = new JsonData2();
+            DetailData json5 = new DetailData();
             json5.Add(dic1);
             array1[2] = json5;
             Console.WriteLine(json2);
@@ -102,28 +102,21 @@ namespace ULoggerCS
             Console.ReadLine();
         }
 
-        static void Main2(string[] args)
+        static void Main(string[] args)
         {
             MyArgs myArgs = MyArgs.GetMyArgs(args);
             Console.WriteLine(myArgs);
 
 #if DEBUG
-            myArgs.FilePath = @"C:\work\Github\ULoggerCS\Test\InputData\sample04";
+            myArgs.FilePath = @"C:\work\Github\ULoggerCS\Test\InputData\sample05_bin.ulog";
             myArgs.FileType = LogFileType.Binary;
             myArgs.IsReadMode = true;
-            if (myArgs.FileType == LogFileType.Binary)
-            {
-                myArgs.FilePath += ".ulgb";
-            }
-            else
-            {
-                myArgs.FilePath += ".ulog"; 
-            }
+            
 #endif
 
             if (myArgs.IsReadMode)
             {
-                TestRead1(myArgs.FilePath, myArgs.FileType);
+                TestRead1(myArgs.FilePath);
             }
             else { 
                 TestWrite1(myArgs.FilePath, myArgs.FileType);
@@ -181,7 +174,7 @@ namespace ULoggerCS
             logger.AddArea("えりあ１", null);
 
             // ログを追加
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 1; i++)
             {
                 logger.AddLogData(1, LogDataType.Single, 1, "てすと１");
             }
@@ -192,7 +185,7 @@ namespace ULoggerCS
             // エリアを追加
             logger.AddArea("えりあ１－２", "えりあ１");
 
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 1; i++)
             {
                 LogDetailTest1 detail = new LogDetailTest1();
                 detail.DetailText = "ほげ１２３";
@@ -206,7 +199,7 @@ namespace ULoggerCS
             LogDetailTest2 detail2 = new LogDetailTest2();
             detail2.Init();
             
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 1; i++)
             {
                 logger.AddLogData(1, LogDataType.Single, 1, "てすと３", detail2);
             }
@@ -224,13 +217,13 @@ namespace ULoggerCS
          * 
          * @input inputFilePath: 入力ログファイルのパス
          */
-        public static void TestRead1(string inputFilePath, LogFileType fileType)
+        public static void TestRead1(string inputFilePath)
         {
             // Loggerを作成
             LogReader reader = new LogReader();
 
             // ログファイルをメモリに読み込む
-            reader.ReadLogFile(inputFilePath, fileType);
+            reader.ReadLogFile(inputFilePath);
 
             // ファイルに書き出す
             reader.WriteToFile(@"C:\work\Github\ULoggerCS\Test\OutputData\memdata.txt");

@@ -48,9 +48,16 @@ namespace ULoggerCS
          * @input fileType: ログファイルの種類(テキスト、バイナリ)
          * @output : true:成功 / false:失敗
          */
-        public bool ReadLogFile(string inputFilePath, LogFileType fileType)
+        public bool ReadLogFile(string inputFilePath)
         {
-            if (fileType == LogFileType.Text)
+            // 先頭の4バイトの文字列でテキストかバイナリかを判定する
+            string identStr = null;
+            using (var fs = new UFileStream(inputFilePath, FileMode.Open, FileAccess.Read))
+            {
+                identStr = fs.GetString(4);
+            }
+
+            if (identStr.Equals( Logger.IdentText ))
             {
                 ReadLogFileText(inputFilePath);
             }
@@ -79,6 +86,9 @@ namespace ULoggerCS
 
             using (StreamReader sr = new StreamReader(inputFilePath, encoding))
             {
+                // データ種別部分をスキップ
+                sr.ReadLine();
+                
                 // ヘッダ部分を読み込む <head>～</head>
                 while (!sr.EndOfStream)
                 {
@@ -535,29 +545,8 @@ namespace ULoggerCS
                         case "color":
                             log.Color = Convert.ToUInt32(kvp.Value, 16);
                             break;
-                        case "detail_type":
-                            switch(kvp.Value.ToLower())
-                            {
-                                case "text":
-                                    log.DetailType = DetailDataType.Text;
-                                    break;
-                                case "array":
-                                    log.DetailType = DetailDataType.Array;
-                                    break;
-                                case "dictionary":
-                                    log.DetailType = DetailDataType.Dictionary;
-                                    break;
-                                case "json":
-                                    log.DetailType = DetailDataType.JSON;
-                                    break;
-                            }
-                            break;
                         case "detail":
-                            if (log.DetailType == DetailDataType.Array)
-                            {
-                                Console.WriteLine("");
-                            }
-                            log.Detail = kvp.Value;
+                            log.Detail = MemDetailData.Deserialize(kvp.Value);
                             break;
                     }
                 }
@@ -634,6 +623,9 @@ namespace ULoggerCS
             {
                 try
                 {
+                    // データ判定部分をスキップ
+                    fs.GetBytes(4);
+
                     // Header
                     ReadLogHeadBin(fs);
 
@@ -856,14 +848,11 @@ namespace ULoggerCS
                 log.Time1 = time;
             }
 
-            //ログデータ（詳細）の種類
-            log.DetailType = (DetailDataType)fs.GetByte();
-
             //ログデータ(詳細)のサイズ
             //ログデータ(詳細)
-            if (log.DetailType != DetailDataType.None)
+            if (log.Detail != null)
             {
-                log.Detail = fs.GetSizeString();
+                log.Detail = MemDetailData.Deserialize(fs.GetSizeString());
             }
 
             // ログを追加する

@@ -48,11 +48,17 @@ namespace ULoggerCS
 
     class Logger
     {
+        //
         // Consts
+        //
         public const int LOG_BUF_SIZE = 2;      // Dobule buffer
         //public const int LOG_BLOCK_MAX = 10;    // 確保可能なブロック数
+        public const string IdentText = "text\r\n";    // ファイルの種別判定用文字列(テキスト)
+        public const string IdentBin = "data";     // ファイルの種別判定用文字列(バイナリ)
 
+        //
         // Properties
+        //
         private LogIDs logIDs;
         private Lanes lanes;
         private IconImages images;
@@ -285,6 +291,8 @@ namespace ULoggerCS
             // ファイルを開く (新規)
             using (StreamWriter sw = new StreamWriter(logFilePath, false, encoding))
             {
+                // ファイルの種別
+                sw.Write(IdentText);
                 sw.WriteLine("<head>");
                 sw.WriteLine("encoding:{0}", UUtility.GetEncodingStr(encoding));
 
@@ -309,6 +317,9 @@ namespace ULoggerCS
             // 新規
             using (UFileStream fs = new UFileStream(logFilePath, FileMode.Create, FileAccess.Write))
             {
+                // ファイルの種別
+                fs.WriteString(IdentBin);
+
                 // エンコードの長さ
                 // エンコード
                 fs.WriteSizeString(UUtility.GetEncodingStr(encoding), Encoding.UTF8);

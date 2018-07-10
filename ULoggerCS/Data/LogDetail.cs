@@ -36,9 +36,6 @@ namespace ULoggerCS
         public abstract LogDetail CreateCopy();
 
         
-        // 詳細の種別を文字列で返す
-        public abstract string dataTypeString();
-
         // 詳細の種別をバイトで返す
         public abstract byte dataTypeByte();
 

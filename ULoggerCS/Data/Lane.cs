@@ -21,24 +21,23 @@ namespace ULoggerCS
         private string  name;       // Lane name
         private UInt32 color;       // Lane (Background) color
 
-        public UInt32 Color
-        {
-            get { return color; }
-            set { color = value; }
-        }
-
-        public string  Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
-
 
         public UInt32 ID
         {
             get { return id; }
             set { id = value; }
         }
+        public string  Name
+        {
+            get { return name; }
+            set { name = value; }
+        }
+        public UInt32 Color
+        {
+            get { return color; }
+            set { color = value; }
+        }
+
 
         //
         // Constructor

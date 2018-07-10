@@ -64,7 +64,7 @@ namespace ULoggerCS
             }
             if (detail != null)
             {
-                sb.Append( String.Format( @",detail_type:{0},detail:""{1}""", detail.dataTypeString(), detail.ToString()));
+                sb.Append( String.Format( @",detail:""{0}""", detail.ToString()));
             }
 
             return sb.ToString();
