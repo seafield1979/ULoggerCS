@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -97,7 +98,7 @@ namespace ULoggerCS
         }
     }
 
-    class MemLogIDs : IEnumerator
+    class MemLogIDs
     {
         // Variables
         private List<MemLogID> logIDs;

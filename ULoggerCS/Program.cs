@@ -108,9 +108,9 @@ namespace ULoggerCS
             Console.WriteLine(myArgs);
 
 #if DEBUG
-            myArgs.FilePath = @"C:\work\Github\ULoggerCS\Test\InputData\sample05_bin.ulog";
-            myArgs.FileType = LogFileType.Binary;
-            myArgs.IsReadMode = true;
+            myArgs.FilePath = @"C:\work\Github\ULoggerCS\Test\InputData\sample05.ulog";
+            myArgs.FileType = LogFileType.Text;
+            myArgs.IsReadMode = false;
             
 #endif
 

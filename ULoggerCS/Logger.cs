@@ -53,7 +53,7 @@ namespace ULoggerCS
         //
         public const int LOG_BUF_SIZE = 2;      // Dobule buffer
         //public const int LOG_BLOCK_MAX = 10;    // 確保可能なブロック数
-        public const string IdentText = "text\r\n";    // ファイルの種別判定用文字列(テキスト)
+        public const string IdentText = "text";    // ファイルの種別判定用文字列(テキスト)
         public const string IdentBin = "data";     // ファイルの種別判定用文字列(バイナリ)
 
         //
@@ -289,10 +289,16 @@ namespace ULoggerCS
         public void WriteHeaderText()
         {
             // ファイルを開く (新規)
-            using (StreamWriter sw = new StreamWriter(logFilePath, false, encoding))
+            using (FileStream fs = new FileStream(logFilePath, FileMode.Create))
             {
                 // ファイルの種別
-                sw.Write(IdentText);
+                byte[] buf = encoding.GetBytes(IdentText);
+                fs.Write(buf, 0, buf.Length);
+            }
+
+            using (StreamWriter sw = new StreamWriter(logFilePath, true, encoding))
+            {
+                sw.WriteLine("");
                 sw.WriteLine("<head>");
                 sw.WriteLine("encoding:{0}", UUtility.GetEncodingStr(encoding));
 

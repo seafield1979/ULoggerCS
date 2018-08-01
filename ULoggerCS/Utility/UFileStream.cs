@@ -273,7 +273,7 @@ namespace ULoggerCS.Utility
             // string
             byte[] _buf = new byte[size];
             fs.Read(_buf, 0, size);
-            return encoding.GetString(buf);
+            return encoding.GetString(_buf);
         }
 
         #endregion
